@@ -159,6 +159,19 @@ This project is a web-based chess game with an AI opponent and user analytics. I
 - **Purpose:**
   - This feature is designed to make the chess experience more transparent and educational, especially for beginners who want to learn not just what to play, but why to play it.
 
+### 8. In-Game Outcome Prediction (Who is Likely to Win?)
+- **Feature Overview:**
+  - During the game, the backend uses the chess engine's evaluation to predict which side (White or Black) is currently more likely to win.
+  - The evaluation score is analyzed after each move, and a simple message like "White likely to win" or "Black likely to win" can be shown based on the position.
+
+- **How it works:**
+  - After every move, the engine evaluates the board position.
+  - If the evaluation score is strongly positive, it means White is ahead; if strongly negative, Black is ahead.
+  - Thresholds are set (e.g., +200 means White is likely to win, -200 means Black is likely to win, otherwise the game is balanced).
+
+- **Purpose:**
+  - This gives players real-time insight into who is favored in the current position, helping them understand the impact of each move and learn from the game's flow.
+
 ## How to Run
 1. Install backend dependencies: `pip install -r backend/requirements.txt`
 2. (Optional) Download Stockfish engine and update its path in `app.py`.
