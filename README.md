@@ -1,39 +1,5 @@
 # Chess AI Game Opponent
 
-## Real World Problem & Solution (Offline Chess Learning)
-
-### Real World Problem
-Most chess learning tools and AI-powered analysis platforms require an internet connection, user accounts, or paid subscriptions. This creates barriers for:
-- Students and learners in areas with limited or unreliable internet access.
-- Users who want privacy and control over their data (no cloud uploads).
-- Anyone seeking a distraction-free, offline environment for chess practice and improvement.
-- People who want instant feedback and analytics without sharing their games online.
-
-### More Real World Problems Addressed
-- **Lack of Personalized Feedback:**
-  - Most offline chess games do not provide move-by-move feedback or analysis, making it hard for players to know where they went wrong or how to improve.
-
-- **Difficulty in Self-Improvement:**
-  - Without a coach or online analysis, players struggle to identify their weaknesses, track progress, or set learning goals.
-
-- **Accessibility for All Ages and Skill Levels:**
-  - Many chess tools are too complex for beginners or too basic for advanced players. There is a need for a tool that adapts to the user's level and grows with them.
-
-- **No Distraction-Free Practice:**
-  - Online platforms often have ads, notifications, or social features that distract from focused learning. Offline tools can provide a pure, distraction-free environment.
-
-- **Resource Constraints in Schools/Clubs:**
-  - Not all schools or chess clubs have internet access or funds for premium software. An offline, free, and feature-rich tool can help democratize chess education.
-
-### Solution (How This Offline Game Solves It)
-- This project is a fully offline, local chess platform with advanced AI/ML features:
-  - **No Internet Required:** All features (AI opponent, move feedback, Elo prediction, analytics) work without any online connection.
-  - **Privacy & Security:** Your games and data never leave your computer. No accounts, no cloud, no tracking.
-  - **Instant AI Feedback:** Get move quality analysis and improvement tips instantly, even without online engines or services.
-  - **Adaptive AI:** The computer opponent adapts to your skill level and playing style, making practice effective and engaging.
-  - **Progress Tracking:** All your games are saved locally, and the system predicts your Elo and analyzes your play over time.
-- This makes chess learning, practice, and improvement accessible to everyone—anytime, anywhere, with full privacy and no cost.
-
 ## Project Overview
 This project is a web-based chess game with an AI opponent and user analytics. It combines a modern JavaScript frontend with a Python Flask backend to deliver an interactive chess experience, player profiling, and Elo prediction.
 
