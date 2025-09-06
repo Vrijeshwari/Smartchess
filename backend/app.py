@@ -99,22 +99,49 @@ from sklearn.linear_model import LinearRegression
 def train_elo_model(data_path="user_game_data.csv"):
     if not os.path.exists(data_path):
         return None, None
-    df = pd.read_csv(data_path, names=["result","blunders","cpl","moves"])
-    result_map = {"1-0": 1400, "0-1": 1000, "1/2-1/2": 1200, "win": 1400, "loss": 1000, "draw": 1200}
-    df = df[df["result"].isin(result_map.keys())]
-    df["elo"] = df["result"].map(result_map)
-    X = df[["blunders","cpl","moves"]]
-    y = df["elo"]
-    if len(X) < 3:
+    
+    try:
+        # Read CSV with headers
+        df = pd.read_csv(data_path)
+        print(f"[DEBUG] CSV loaded: {len(df)} rows, columns: {df.columns.tolist()}")
+        
+        # Use elo column if available, otherwise map from result
+        if 'elo' in df.columns:
+            X = df[["blunders","cpl","moves"]]
+            y = df["elo"]
+        else:
+            result_map = {"1-0": 1400, "0-1": 1000, "1/2-1/2": 1200, "win": 1400, "loss": 1000, "draw": 1200}
+            df = df[df["result"].isin(result_map.keys())]
+            df["elo"] = df["result"].map(result_map)
+            X = df[["blunders","cpl","moves"]]
+            y = df["elo"]
+        
+        if len(X) < 3:
+            print(f"[DEBUG] Not enough data: {len(X)} rows")
+            return None, None
+            
+        print(f"[DEBUG] Training model with {len(X)} samples")
+        model = LinearRegression()
+        model.fit(X, y)
+        print(f"[DEBUG] Model trained successfully")
+        return model, X.columns
+        
+    except Exception as e:
+        print(f"[ERROR] Failed to train model: {e}")
         return None, None
-    model = LinearRegression()
-    model.fit(X, y)
-    return model, X.columns
 
 def predict_elo(blunders, cpl, moves, model, feature_names):
     if model is None or feature_names is None:
         return None
-    X_pred = np.array([[blunders, cpl, moves]])
+    
+    # Create DataFrame with proper feature names to avoid warnings
+    import pandas as pd
+    X_pred = pd.DataFrame({
+        'blunders': [blunders],
+        'cpl': [cpl], 
+        'moves': [moves]
+    })
+    
     elo_pred = model.predict(X_pred)[0]
     return float(elo_pred)
 
@@ -588,29 +615,82 @@ def ai_status():
 def predict_elo_api():
     if request.method == 'OPTIONS':
         return '', 200
+    
+    print("[DEBUG] predict-elo endpoint called")
     data = request.get_json()
+    print(f"[DEBUG] Received data: {data}")
+    
     # Validate input
     required_fields = ["blunders", "cpl", "moves"]
     if not all(field in data for field in required_fields):
+        print(f"[ERROR] Missing fields. Got: {list(data.keys())}")
         return jsonify({"error": "Missing required fields: blunders, cpl, moves"}), 400
+    
     try:
         blunders = int(data["blunders"])
         cpl = float(data["cpl"])
         moves = int(data["moves"])
+        print(f"[DEBUG] Parsed values - blunders: {blunders}, cpl: {cpl}, moves: {moves}")
     except Exception as e:
+        print(f"[ERROR] Invalid input types: {e}")
         return jsonify({"error": f"Invalid input types: {e}"}), 400
 
     # Train/load model
+    print("[DEBUG] Training/loading model...")
     model, feature_names = train_elo_model("user_game_data.csv")
     if model is None or feature_names is None:
+        print("[ERROR] Model training failed")
         return jsonify({"error": "Not enough data to train Elo model. Play and save more games first."}), 400
 
     # Predict Elo
     try:
+        print("[DEBUG] Making prediction...")
         elo = predict_elo(blunders, cpl, moves, model, feature_names)
+        print(f"[DEBUG] Predicted Elo: {elo}")
         return jsonify({"predicted_elo": round(elo, 2)})
     except Exception as e:
+        print(f"[ERROR] Prediction failed: {e}")
         return jsonify({"error": f"Prediction failed: {e}"}), 500
+
+@app.route('/save-game-data', methods=['POST', 'OPTIONS'])
+def save_game_data():
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+    
+    try:
+        # Extract game data
+        result = data.get('result', 'draw')
+        blunders = data.get('blunders', 0)
+        cpl = data.get('cpl', 0)
+        moves = data.get('moves', 1)
+        
+        # Estimate Elo based on performance
+        if result == 'win':
+            estimated_elo = 1200 + (50 - blunders * 10) - (cpl * 2)
+        elif result == 'loss':
+            estimated_elo = 1000 + (30 - blunders * 8) - (cpl * 1.5)
+        else:  # draw
+            estimated_elo = 1150 + (40 - blunders * 9) - (cpl * 1.8)
+        
+        estimated_elo = max(800, min(1600, estimated_elo))  # Clamp between 800-1600
+        
+        # Save to CSV
+        import csv
+        with open('user_game_data.csv', 'a', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow([result, blunders, cpl, moves, round(estimated_elo)])
+        
+        return jsonify({
+            'success': True, 
+            'estimated_elo': round(estimated_elo),
+            'message': 'Game data saved successfully'
+        })
+    except Exception as e:
+        return jsonify({'error': f'Failed to save game data: {e}'}), 500
 
 @atexit.register
 def cleanup():
