@@ -1,5 +1,4 @@
 # Chess AI Game Opponent
-
 ## Project Overview
 This project is a web-based chess game with an AI opponent and user analytics. It combines a modern JavaScript frontend with a Python Flask backend to deliver an interactive chess experience, player profiling, and Elo prediction.
 

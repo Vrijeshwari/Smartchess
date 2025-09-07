@@ -94,6 +94,9 @@ function makeMove(fromRow, fromCol, toRow, toCol) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ fen: fen, move: moveStr })
         }); // No alert, no console.log, just trigger backend print
+        
+        // --- Game Outcome Prediction (NEW) ---
+        updateOutcomePrediction(fen);
     }
 
     if (currentPlayer === 'white') {
@@ -106,6 +109,56 @@ function makeMove(fromRow, fromCol, toRow, toCol) {
     }
     createBoard();
     updateCapturedPieces();
+}
+
+// --- Game Outcome Prediction Functions (NEW AI/ML Feature) ---
+async function updateOutcomePrediction(fen) {
+    try {
+        const response = await fetch('http://127.0.0.1:5000/predict-outcome', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fen: fen })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            displayOutcomePrediction(data);
+        } else {
+            console.warn('Outcome prediction failed');
+        }
+    } catch (error) {
+        console.warn('Could not get outcome prediction:', error);
+    }
+}
+
+function displayOutcomePrediction(predictionData) {
+    const outcomeElement = document.getElementById('outcomePrediction');
+    const confidenceElement = document.getElementById('predictionConfidence');
+    
+    if (outcomeElement && confidenceElement) {
+        outcomeElement.textContent = `🎯 ${predictionData.prediction_text}`;
+        confidenceElement.textContent = `📊 Confidence: ${(predictionData.confidence * 100).toFixed(1)}%`;
+        
+        // Color coding based on prediction
+        outcomeElement.className = 'outcome-prediction';
+        if (predictionData.prediction === 2) {
+            outcomeElement.style.color = '#4CAF50'; // Green for White advantage
+        } else if (predictionData.prediction === 0) {
+            outcomeElement.style.color = '#f44336'; // Red for Black advantage
+        } else {
+            outcomeElement.style.color = '#FF9800'; // Orange for balanced
+        }
+        
+        // Show analysis in console for debugging
+        console.log('🎯 Game Analysis:', predictionData.analysis);
+        console.log('💡 Recommendations:', predictionData.recommendations);
+    }
+}
+
+// Call prediction on game start
+function initializePrediction() {
+    const fen = boardToFEN();
+    updateOutcomePrediction(fen);
 }
 
 // Call backend to get Elo prediction after game ends
@@ -219,6 +272,11 @@ function initializeGame() {
     updateGameInfo();
     createBoard();
     updateCapturedPieces();
+    
+    // Initialize outcome prediction for new game
+    setTimeout(() => {
+        initializePrediction();
+    }, 500); // Small delay to ensure board is ready
 }
 
 // NEW: Add New Game button function
@@ -555,6 +613,11 @@ async function aiMove() {
                 isNewGame = false;
                 console.log("[INFO] New game flag cleared after first AI move");
             }
+            
+            // Update outcome prediction after AI move
+            const newFen = boardToFEN();
+            updateOutcomePrediction(newFen);
+            
             // Display AI info (optional)
             if (data.engine || data.profile || data.outcome_prediction) {
                 console.log(`[AI INFO] Engine: ${data.engine}, Profile: ${data.profile}, Prediction: ${data.outcome_prediction}`);

@@ -35,6 +35,20 @@ body {
     font-size: 16px;
     color: #666;
 }
+.outcome-prediction {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 8px 0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: #f5f5f5;
+    border-left: 4px solid #2196F3;
+}
+.prediction-confidence {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 5px;
+}
 .chess-board {
     display: grid;
     grid-template-columns: repeat(8, 70px);
