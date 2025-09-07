@@ -95,6 +95,108 @@ def move_feedback():
         return jsonify({'error': str(e)}), 500
 
 from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestClassifier
+import joblib
+
+# --- Game Outcome Prediction Model ---
+class GameOutcomePredictor:
+    def __init__(self):
+        self.model = None
+        self.is_trained = False
+        
+    def extract_position_features(self, board):
+        """Extract features from chess position for ML prediction"""
+        features = {}
+        
+        # Material count
+        piece_values = {chess.PAWN: 1, chess.KNIGHT: 3, chess.BISHOP: 3, 
+                       chess.ROOK: 5, chess.QUEEN: 9, chess.KING: 0}
+        white_material = black_material = 0
+        white_pieces = black_pieces = 0
+        
+        # Piece mobility and attacks
+        white_mobility = len(list(board.legal_moves)) if board.turn == chess.WHITE else 0
+        board.turn = not board.turn  # Switch turn to count black mobility
+        black_mobility = len(list(board.legal_moves)) if board.turn == chess.BLACK else 0
+        board.turn = not board.turn  # Switch back
+        
+        # Count pieces and material
+        for square in chess.SQUARES:
+            piece = board.piece_at(square)
+            if piece:
+                value = piece_values[piece.piece_type]
+                if piece.color == chess.WHITE:
+                    white_material += value
+                    white_pieces += 1
+                else:
+                    black_material += value
+                    black_pieces += 1
+        
+        # King safety (simplified)
+        white_king_square = board.king(chess.WHITE)
+        black_king_square = board.king(chess.BLACK)
+        white_king_attacks = len(board.attackers(chess.BLACK, white_king_square))
+        black_king_attacks = len(board.attackers(chess.WHITE, black_king_square))
+        
+        features = {
+            'material_advantage': white_material - black_material,
+            'piece_advantage': white_pieces - black_pieces,
+            'mobility_advantage': white_mobility - black_mobility,
+            'king_safety_advantage': black_king_attacks - white_king_attacks,
+            'game_phase': min(white_pieces + black_pieces, 32) / 32.0,  # 0=endgame, 1=opening
+            'white_material': white_material,
+            'black_material': black_material,
+            'total_moves': len(board.move_stack)
+        }
+        
+        return list(features.values())
+    
+    def predict_outcome(self, board):
+        """Predict game outcome: 0=Black wins, 1=Draw, 2=White wins"""
+        try:
+            features = self.extract_position_features(board)
+            
+            # Simple heuristic if model not trained
+            if not self.is_trained:
+                material_diff = features[0]  # material_advantage
+                if material_diff > 3:
+                    return 2, 0.8  # White likely wins
+                elif material_diff < -3:
+                    return 0, 0.8  # Black likely wins
+                else:
+                    return 1, 0.6  # Draw likely
+            
+            # Use trained model
+            prediction = self.model.predict([features])[0]
+            probabilities = self.model.predict_proba([features])[0]
+            confidence = max(probabilities)
+            
+            return int(prediction), float(confidence)
+            
+        except Exception as e:
+            print(f"[ERROR] Prediction failed: {e}")
+            return 1, 0.5  # Default to draw with low confidence
+    
+    def get_prediction_text(self, prediction, confidence):
+        """Convert prediction to human readable text"""
+        outcomes = {
+            0: "Black likely to win",
+            1: "Position is balanced", 
+            2: "White likely to win"
+        }
+        
+        confidence_text = ""
+        if confidence > 0.8:
+            confidence_text = " (High confidence)"
+        elif confidence > 0.6:
+            confidence_text = " (Medium confidence)"
+        else:
+            confidence_text = " (Low confidence)"
+            
+        return outcomes.get(prediction, "Unclear") + confidence_text
+
+# Initialize game outcome predictor
+game_predictor = GameOutcomePredictor()
 
 def train_elo_model(data_path="user_game_data.csv"):
     if not os.path.exists(data_path):
@@ -278,31 +380,43 @@ class AdaptiveAI:
         # Use adaptive difficulty
         depth = getattr(self, 'adaptive_depth', 3)
         use_random = self.adaptive_randomness if randomize is None else randomize
+        
+        # Safety check: ensure there are legal moves
+        legal_moves = list(board.legal_moves)
+        if not legal_moves:
+            print("[ERROR] No legal moves available in get_ai_move!")
+            return None
+            
         if self.move_count == 0 or force_random:
-            legal_moves = list(board.legal_moves)
-            if legal_moves:
-                return random.choice(legal_moves)
+            return random.choice(legal_moves)
+            
         profile = self.get_player_profile()
         # Optionally, profile can still influence depth
         if profile == "Aggressive":
             depth = max(depth, 4)
         elif profile == "Defensive":
             depth = max(depth, 3)
+            
         moves_scores = []
-        for move in board.legal_moves:
-            board.push(move)
-            score, _ = self.minimax(board, depth - 1, float("-inf"), float("inf"), False)
-            board.pop()
-            moves_scores.append((move, score))
+        try:
+            for move in board.legal_moves:
+                board.push(move)
+                score, _ = self.minimax(board, depth - 1, float("-inf"), float("inf"), False)
+                board.pop()
+                moves_scores.append((move, score))
+        except Exception as e:
+            print(f"[ERROR] Minimax evaluation failed: {e}")
+            return random.choice(legal_moves)  # Fallback to random
+            
         moves_scores.sort(key=lambda x: -x[1])
         if use_random and len(moves_scores) > 0:
             top_moves = [m[0] for m in moves_scores[:top_n]]
             return random.choice(top_moves)
         if moves_scores:
             return moves_scores[0][0]
-        legal_moves = list(board.legal_moves)
-        if legal_moves:
-            return random.choice(legal_moves)
+        
+        # Final fallback
+        return random.choice(legal_moves)
 
 STOCKFISH_PATH = r"C:\\Users\\akash\\Downloads\\stockfish\\stockfish-windows-x86-64-avx2.exe"
 
@@ -399,6 +513,10 @@ def ai_move():
         # For first move, make it completely random from ALL legal moves
         legal_moves = list(board.legal_moves)
         
+        if not legal_moves:
+            print("[CRITICAL] No legal moves available for first AI move!")
+            return jsonify({'error': 'No legal moves available'}), 500
+        
         # Debug: Show what types of moves are available
         move_types = {}
         for move_option in legal_moves:
@@ -493,10 +611,20 @@ def ai_move():
         
         print(f"[DEBUG] Strategic move selected: {move.uci() if move else 'None'}")
 
-    # Safety check
+    # Safety check with fallback
     if not isinstance(move, chess.Move):
         print("ERROR: move type is not chess.Move! Received:", type(move), move)
-        return jsonify({'error': 'Internal error: AI move type wrong'}), 500
+        print("[EMERGENCY] Generating fallback move...")
+        
+        # Emergency fallback: get ANY legal move
+        legal_moves = list(board.legal_moves)
+        if legal_moves:
+            move = random.choice(legal_moves)
+            engine_used = 'emergency_fallback'
+            print(f"[EMERGENCY] Selected fallback move: {move.uci()}")
+        else:
+            print("[CRITICAL] No legal moves available!")
+            return jsonify({'error': 'No legal moves available - game should be over'}), 500
 
     board.push(move)
 
@@ -567,17 +695,30 @@ def ai_move():
     board.push(move)
     explanation = explain_move(move, board_before, board)
 
+    # Get outcome prediction for current position
+    try:
+        outcome_pred, outcome_conf = game_predictor.predict_outcome(board)
+        outcome_text = game_predictor.get_prediction_text(outcome_pred, outcome_conf)
+    except Exception as e:
+        print(f"[WARNING] Outcome prediction failed: {e}")
+        outcome_pred, outcome_conf, outcome_text = 1, 0.5, "Position unclear"
+
     response = {
         'move': move.uci(),
         'fen': board.fen(),
         'profile': ai_engine.get_player_profile(),
         'engine': engine_used,
-        'outcome_prediction': outcome,
+        'outcome_prediction': outcome_text,
+        'outcome_confidence': round(outcome_conf, 3),
         'eval_score': stockfish_eval if stockfish_eval is not None else "N/A",
         'move_number': ai_engine.move_count,
         'is_first_move': is_first_ai_move,
         'game_state': 'new_game' if is_first_ai_move else 'ongoing',
-        'explanation': explanation
+        'explanation': explanation,
+        'position_analysis': {
+            'material_balance': 'Check /predict-outcome for detailed analysis',
+            'recommended_strategy': 'Focus on ' + ('attack' if outcome_pred == 2 else 'defense' if outcome_pred == 0 else 'balanced play')
+        }
     }
     
     print(f"[DEBUG] ========== FINAL RESPONSE ==========")
@@ -599,6 +740,73 @@ def force_reset():
         'ai_move_count': ai_engine.move_count,
         'status': 'fresh_start'
     })
+
+@app.route('/predict-outcome', methods=['POST', 'OPTIONS'])
+def predict_game_outcome():
+    """Real-time game outcome prediction endpoint"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    data = request.get_json()
+    fen = data.get('fen')
+    
+    if not fen:
+        return jsonify({'error': 'FEN string required'}), 400
+    
+    try:
+        board = chess.Board(fen)
+        
+        # Get prediction
+        prediction, confidence = game_predictor.predict_outcome(board)
+        prediction_text = game_predictor.get_prediction_text(prediction, confidence)
+        
+        # Extract additional analysis
+        features = game_predictor.extract_position_features(board)
+        
+        response = {
+            'prediction': int(prediction),
+            'confidence': round(confidence, 3),
+            'prediction_text': prediction_text,
+            'analysis': {
+                'material_advantage': features[0],
+                'mobility_advantage': features[2], 
+                'game_phase': round(features[4], 2),
+                'total_moves': features[7]
+            },
+            'recommendations': get_position_recommendations(board, prediction)
+        }
+        
+        print(f"[OUTCOME PREDICTION] {prediction_text} (Confidence: {confidence:.2f})")
+        return jsonify(response)
+        
+    except Exception as e:
+        print(f"[ERROR] Outcome prediction failed: {e}")
+        return jsonify({'error': str(e)}), 500
+
+def get_position_recommendations(board, prediction):
+    """Get strategic recommendations based on position"""
+    recommendations = []
+    
+    # Basic recommendations based on prediction
+    if prediction == 2:  # White advantage
+        recommendations.append("White should maintain pressure and avoid trades")
+        recommendations.append("Look for tactical opportunities to increase advantage")
+    elif prediction == 0:  # Black advantage  
+        recommendations.append("Black should consolidate advantage")
+        recommendations.append("Consider simplifying to winning endgame")
+    else:  # Balanced
+        recommendations.append("Position is roughly equal")
+        recommendations.append("Look for imbalances to create winning chances")
+    
+    # Game phase recommendations
+    if len(board.move_stack) < 20:
+        recommendations.append("Focus on piece development and king safety")
+    elif len(board.move_stack) > 60:
+        recommendations.append("Endgame: activate king and push passed pawns")
+    else:
+        recommendations.append("Middlegame: look for tactical combinations")
+    
+    return recommendations
 
 # Add endpoint to check current AI state
 @app.route('/ai-status', methods=['GET'])
