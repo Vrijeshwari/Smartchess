@@ -63,7 +63,11 @@ function exportGameAsPGN() {
         }
         pgnMoves += `${moveHistory[i]} `;
     }
-    return `[Event "AI Game"]\n[Site "Local"]\n[Result "*"]\n\n${pgnMoves.trim()}`;
+    return `[Event "AI Game"]
+[Site "Local"]
+[Result "*"]
+
+${pgnMoves.trim()}`;
 }
 
 // When making a move, push move to history (UCI format)
@@ -201,12 +205,34 @@ async function getEloPrediction() {
         });
         const data = await res.json();
         if (data.predicted_elo) {
-            alert(`Estimated Elo: ${data.predicted_elo}\nBlunders: ${blunders}\nAvg CPL: ${cpl}`);
+            // Enhanced Elo prediction - keep logic but remove alert
+            const eloRating = Math.round(data.predicted_elo);
+            let eloDescription = '';
+            
+            if (eloRating >= 1400) {
+                eloDescription = 'Strong Player 💪';
+            } else if (eloRating >= 1200) {
+                eloDescription = 'Intermediate Player 📈';
+            } else if (eloRating >= 1000) {
+                eloDescription = 'Beginner Player 🌱';
+            } else {
+                eloDescription = 'Learning Player 📚';
+            }
+            
+            // Log to console instead of showing alert
+            console.log(`🏆 Your Performance Analysis:`);
+            console.log(`⭐ Estimated Elo: ${eloRating}`);
+            console.log(`📊 Skill Level: ${eloDescription}`);
+            console.log(`📈 Game Stats:`);
+            console.log(`• Total Moves: ${moves}`);
+            console.log(`• Blunders: ${blunders}`);
+            console.log(`• Average CPL: ${cpl}`);
+            console.log(`💡 Keep playing to improve your rating!`);
         } else {
-            alert('Not enough data to estimate Elo yet. Play more games!');
+            console.log('📊 Not enough data to estimate Elo yet. Play more games to get your rating!');
         }
     } catch (err) {
-        alert('Failed to contact backend for Elo prediction.');
+        console.warn('Failed to contact backend for Elo prediction. Please ensure the Python server is running.');
     }
 }
 
@@ -281,8 +307,113 @@ function initializeGame() {
 
 // NEW: Add New Game button function
 function startNewGame() {
+    closeGameEndModal(); // Close modal first
     initializeGame();
     console.log("[INFO] New game started - isNewGame flag set to true");
+}
+
+// Game End Modal Functions
+function showGameEndModal(winner, endType, gameStats) {
+    const modal = document.getElementById('gameEndModal');
+    const gameResult = document.getElementById('gameResult');
+    const winnerAnnouncement = document.getElementById('winnerAnnouncement');
+    const statsElement = document.getElementById('gameStats');
+    
+    // Determine result emoji and message
+    let resultEmoji = '';
+    let resultMessage = '';
+    let isPlayerWin = false;
+    
+    if (endType === 'checkmate') {
+        if (winner.includes('User')) {
+            resultEmoji = '🎉👑🏆';
+            resultMessage = 'VICTORY!';
+            isPlayerWin = true;
+        } else {
+            resultEmoji = '😔💔';
+            resultMessage = 'DEFEAT';
+        }
+    } else if (endType === 'stalemate') {
+        resultEmoji = '🤝⚖️';
+        resultMessage = 'STALEMATE';
+    } else if (endType === 'king_captured') {
+        if (winner.includes('User')) {
+            resultEmoji = '🎯👑💥';
+            resultMessage = 'KING CAPTURED!';
+            isPlayerWin = true;
+        } else {
+            resultEmoji = '☠️👑';
+            resultMessage = 'KING LOST!';
+        }
+    } else if (endType === 'insufficient_material') {
+        resultEmoji = '🏆⚔️👑';
+        resultMessage = 'VICTORY! INSUFFICIENT MATERIAL';
+        isPlayerWin = true;
+    } else if (endType === 'move_limit') {
+        resultEmoji = '⏰🤝';
+        resultMessage = 'TIME DRAW';
+    }
+    
+    // Set content
+    gameResult.textContent = resultEmoji;
+    winnerAnnouncement.textContent = resultMessage;
+    
+    // Add victory/defeat animation classes
+    if (isPlayerWin) {
+        winnerAnnouncement.className = 'winner-announcement victory-player';
+    } else if (winner.includes('AI')) {
+        winnerAnnouncement.className = 'winner-announcement victory-ai';
+    } else {
+        winnerAnnouncement.className = 'winner-announcement';
+    }
+    
+    // Show game statistics
+    const moves = moveHistory.length;
+    const capturedByPlayer = capturedBlack.length;
+    const capturedByAI = capturedWhite.length;
+    const blunders = window.blunderCount || 0;
+    
+    statsElement.innerHTML = `
+        <div><strong>🎮 Game Statistics</strong></div>
+        <div>📋 Total Moves: ${moves}</div>
+        <div>🏹 You Captured: ${capturedByPlayer} pieces</div>
+        <div>🤖 AI Captured: ${capturedByAI} pieces</div>
+        <div>⚠️ Blunders: ${blunders}</div>
+        <div>🏆 Winner: ${winner}</div>
+    `;
+    
+    // Show alert instead of modal
+    alert(`${resultEmoji}
+
+${resultMessage}
+
+🎮 Game Statistics:
+📋 Total Moves: ${moves}
+🏹 You Captured: ${capturedByPlayer} pieces
+🤖 AI Captured: ${capturedByAI} pieces
+⚠️ Blunders: ${blunders}
+
+🏆 Winner: ${winner}`);
+    
+    // Play victory/defeat sound (optional - you can add sound files)
+    if (isPlayerWin) {
+        console.log('🎉 Player Victory! Well played!');
+    } else if (winner.includes('AI')) {
+        console.log('🤖 AI Victory! Better luck next time!');
+    }
+}
+
+function closeGameEndModal() {
+    const modal = document.getElementById('gameEndModal');
+    modal.style.display = 'none';
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('gameEndModal');
+    if (event.target == modal) {
+        closeGameEndModal();
+    }
 }
 
 // Create the chess board
@@ -493,6 +624,35 @@ function makeMove(fromRow, fromCol, toRow, toCol) {
                     String.fromCharCode(97 + toCol) + (8 - toRow);
     moveHistory.push(moveStr);
 
+    // --- Check for king capture only (no insufficient material check) ---
+    let whiteKing = false, blackKing = false;
+    
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            const boardPiece = gameBoard[r][c];
+            if (boardPiece) {
+                if (boardPiece === '♔') whiteKing = true;
+                if (boardPiece === '♚') blackKing = true;
+            }
+        }
+    }
+    
+    // Only end game if king is actually captured, not just isolated
+    if (!whiteKing || !blackKing) {
+        console.log('[GAME END] King captured');
+        setTimeout(() => {
+            const winner = whiteKing ? 'User (White)' : 'AI (Black)';
+            showGameEndModal(winner, 'king_captured', {
+                moves: moveHistory.length,
+                capturedByPlayer: capturedBlack.length,
+                capturedByAI: capturedWhite.length,
+                blunders: window.blunderCount || 0
+            });
+            getEloPrediction();
+        }, 500);
+        return;
+    }
+
     // --- Adaptive AI: Track player style ---
     if (currentPlayer === 'white') {
         if (capturedPiece) {
@@ -567,6 +727,35 @@ async function aiMove() {
         // Log the AI response
         console.log("[DEBUG] AI Response:", data);
         
+        // Check if game is over from backend
+        if (data.game_over) {
+            console.log("[GAME OVER] Backend detected game end:", data.reason);
+            
+            let winner = '';
+            let endType = data.reason;
+            
+            if (data.winner === 'white') {
+                winner = 'User (White)';
+            } else if (data.winner === 'black') {
+                winner = 'AI (Black)';
+            } else {
+                winner = 'Draw';
+            }
+            
+            // Show game end modal
+            setTimeout(() => {
+                showGameEndModal(winner, endType, {
+                    moves: moveHistory.length,
+                    capturedByPlayer: capturedBlack.length,
+                    capturedByAI: capturedWhite.length,
+                    blunders: window.blunderCount || 0
+                });
+                getEloPrediction();
+            }, 1000);
+            
+            return;
+        }
+        
         if (data.move && data.fen) {
             // Update board from FEN
             fenToBoard(data.fen);
@@ -577,15 +766,22 @@ async function aiMove() {
 
             // Check for game end after AI move (for human)
             let whiteKing = false, blackKing = false;
+            
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
-                    if (gameBoard[r][c] === '♔') whiteKing = true;
-                    if (gameBoard[r][c] === '♚') blackKing = true;
+                    const boardPiece = gameBoard[r][c];
+                    if (boardPiece) {
+                        if (boardPiece === '♔') whiteKing = true;
+                        if (boardPiece === '♚') blackKing = true;
+                    }
                 }
             }
+            
             let gameEnded = false;
             let endType = '';
             let winner = '';
+            
+            // Check for king capture or move limit (NO insufficient material check)
             if (!whiteKing || !blackKing) {
                 gameEnded = true;
                 endType = 'king_captured';
@@ -630,11 +826,25 @@ async function aiMove() {
                     msg = 'Stalemate! Game is a draw.';
                 } else if (endType === 'king_captured') {
                     msg = `King captured! Winner: ${winner}`;
+                } else if (endType === 'insufficient_material') {
+                    msg = `Insufficient material! Winner: ${winner}`;
                 } else if (endType === 'move_limit') {
                     msg = '80-move limit reached! Game is a draw.';
                 }
-                alert(msg);
-                getEloPrediction();
+                
+                // Update game status
+                updateGameStatus(`Game Over: ${msg}`);
+                
+                // Show enhanced game end modal instead of alert
+                setTimeout(() => {
+                    showGameEndModal(winner, endType, {
+                        moves: moveHistory.length,
+                        capturedByPlayer: capturedBlack.length,
+                        capturedByAI: capturedWhite.length,
+                        blunders: window.blunderCount || 0
+                    });
+                    getEloPrediction();
+                }, 1000); // Small delay for better UX
             }
         } else {
             alert('AI error: ' + (data.error || 'Unknown error'));
@@ -705,6 +915,13 @@ function updateGameInfo() {
     document.getElementById('gameStatus').textContent = 'Game in progress';
 }
 
+// Update game status for game end
+function updateGameStatus(status) {
+    document.getElementById('gameStatus').textContent = status;
+    document.getElementById('gameStatus').style.color = '#e74c3c';
+    document.getElementById('gameStatus').style.fontWeight = 'bold';
+}
+
 // Update captured pieces display
 function updateCapturedPieces() {
     document.getElementById('capturedWhite').textContent = capturedWhite.join(' ');
@@ -746,15 +963,22 @@ function handleDrop(e) {
         makeMove(selectedSquare.row, selectedSquare.col, toRow, toCol);
         // --- Check for game end: checkmate, stalemate, king missing, or 80+ moves ---
         let whiteKing = false, blackKing = false;
+        
         for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
-                if (gameBoard[r][c] === '♔') whiteKing = true;
-                if (gameBoard[r][c] === '♚') blackKing = true;
+                const boardPiece = gameBoard[r][c];
+                if (boardPiece) {
+                    if (boardPiece === '♔') whiteKing = true;
+                    if (boardPiece === '♚') blackKing = true;
+                }
             }
         }
+        
         let gameEnded = false;
         let endType = '';
         let winner = '';
+        
+        // Check for king capture or move limit (NO insufficient material check)
         if (!whiteKing || !blackKing) {
             gameEnded = true;
             endType = 'king_captured';
@@ -785,11 +1009,22 @@ function handleDrop(e) {
                 msg = 'Stalemate! Game is a draw.';
             } else if (endType === 'king_captured') {
                 msg = `King captured! Winner: ${winner}`;
+            } else if (endType === 'insufficient_material') {
+                msg = `Insufficient material! Winner: ${winner}`;
             } else if (endType === 'move_limit') {
                 msg = '80-move limit reached! Game is a draw.';
             }
-            alert(msg);
-            getEloPrediction();
+            
+            // Show enhanced game end modal instead of alert
+            setTimeout(() => {
+                showGameEndModal(winner, endType, {
+                    moves: moveHistory.length,
+                    capturedByPlayer: capturedBlack.length,
+                    capturedByAI: capturedWhite.length,
+                    blunders: window.blunderCount || 0
+                });
+                getEloPrediction();
+            }, 1000); // Small delay for better UX
         } else {
             switchPlayer();
         }

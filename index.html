@@ -30,6 +30,20 @@
             <div>Captured White: <span class="captured-white" id="capturedWhite"></span></div>
             <div>Captured Black: <span class="captured-black" id="capturedBlack"></span></div>
         </div>
+        
+        <!-- Game End Modal -->
+        <div id="gameEndModal" class="modal">
+            <div class="modal-content">
+                <div class="game-result" id="gameResult"></div>
+                <div class="winner-announcement" id="winnerAnnouncement"></div>
+                <div class="game-stats" id="gameStats"></div>
+                <div class="modal-buttons">
+                    <button class="play-again-btn" onclick="startNewGame()">🎮 Play Again</button>
+                    <button class="close-btn" onclick="closeGameEndModal()">Close</button>
+                </div>
+            </div>
+        </div>
+        
         <button class="reset-btn" onclick="initializeGame()">New Game</button>
     </div>
     <script src="script.js"></script>

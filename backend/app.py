@@ -337,12 +337,35 @@ class AdaptiveAI:
             chess.QUEEN: 900,
             chess.KING: 20000
         }
+        
+        # Check if either king is missing (game should be over)
+        white_king = board.king(chess.WHITE) is not None
+        black_king = board.king(chess.BLACK) is not None
+        
+        # Massive bonus/penalty for king captures
+        if not white_king:
+            return -999999  # Black wins (very negative for white)
+        if not black_king:
+            return 999999   # White wins (very positive for white)
+        
         score = 0
         for square in chess.SQUARES:
             piece = board.piece_at(square)
             if piece:
                 value = piece_values[piece.piece_type]
                 score += value if piece.color == chess.WHITE else -value
+        
+        # Add king safety evaluation
+        white_king_square = board.king(chess.WHITE)
+        black_king_square = board.king(chess.BLACK)
+        
+        # Penalty for king being under attack
+        white_king_attackers = len(board.attackers(chess.BLACK, white_king_square))
+        black_king_attackers = len(board.attackers(chess.WHITE, black_king_square))
+        
+        score -= white_king_attackers * 50  # Penalty for white king being attacked
+        score += black_king_attackers * 50  # Bonus for attacking black king
+        
         return score
 
     def minimax(self, board, depth, alpha, beta, maximizing):
@@ -389,6 +412,20 @@ class AdaptiveAI:
             
         if self.move_count == 0 or force_random:
             return random.choice(legal_moves)
+        
+        # CRITICAL FIX: Check for immediate king captures first
+        king_capture_moves = []
+        for move in legal_moves:
+            target_piece = board.piece_at(move.to_square)
+            if target_piece and target_piece.piece_type == chess.KING:
+                king_capture_moves.append(move)
+                print(f"[CRITICAL] Found king capture move: {move.uci()}")
+        
+        # Always prioritize king captures
+        if king_capture_moves:
+            selected_move = random.choice(king_capture_moves)
+            print(f"[CRITICAL] AI selecting king capture: {selected_move.uci()}")
+            return selected_move
             
         profile = self.get_player_profile()
         # Optionally, profile can still influence depth
@@ -460,6 +497,37 @@ def ai_move():
         board = chess.Board(fen)
     except Exception as e:
         return jsonify({'error': f'Invalid FEN: {str(e)}'}), 400
+
+    # Check for no legal moves (checkmate or stalemate) - REMOVED insufficient material check
+    if not board.legal_moves or board.is_game_over():
+        if board.is_checkmate():
+            winner = 'white' if board.turn == chess.BLACK else 'black'
+            print(f"[GAME OVER] Checkmate! Winner: {winner}")
+            return jsonify({
+                'game_over': True,
+                'reason': 'checkmate',
+                'winner': winner,
+                'fen': fen,
+                'message': f'Checkmate! {winner.capitalize()} wins!'
+            })
+        elif board.is_stalemate():
+            print("[GAME OVER] Stalemate!")
+            return jsonify({
+                'game_over': True,
+                'reason': 'stalemate',
+                'winner': 'draw',
+                'fen': fen,
+                'message': 'Stalemate! Game is a draw.'
+            })
+        else:
+            print("[GAME OVER] Game over - other condition")
+            return jsonify({
+                'game_over': True,
+                'reason': 'game_over',
+                'winner': 'draw',
+                'fen': fen,
+                'message': 'Game over!'
+            })
 
     # Enhanced game state detection
     starting_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
@@ -557,57 +625,83 @@ def ai_move():
     
     else:
         print(f"[DEBUG] Making strategic move (not first move)")
-        # For subsequent moves, use Stockfish strategically
-        if stockfish_engine:
-            try:
-                result = stockfish_engine.analyse(board, chess.engine.Limit(time=0.5), multipv=TOP_N)
-                top_moves = []
-                eval_score = None
-
-                if isinstance(result, list):
-                    for r in result:
-                        try:
-                            if 'pv' in r and r['pv'] and isinstance(r['pv'][0], chess.Move):
-                                top_moves.append(r['pv'][0])
-                            if eval_score is None and 'score' in r:
-                                eval_score = r['score'].white().score(mate_score=10000)
-                        except Exception:
-                            continue
-                elif isinstance(result, dict):
-                    if 'pv' in result and result['pv'] and isinstance(result['pv'][0], chess.Move):
-                        top_moves.append(result['pv'][0])
-                    if 'score' in result:
-                        eval_score = result['score'].white().score(mate_score=10000)
-                
-                if top_moves:
-                    move = random.choice(top_moves)
-                    engine_used = 'stockfish'
-                else:
-                    move = None
-                stockfish_eval = eval_score
-            except Exception as e:
-                print("[WARNING] Stockfish error:", e)
-                move = None
-
-        # Fallback to adaptive AI if Stockfish fails
-        if not move:
-            move = ai_engine.get_ai_move(board, randomize=True, top_n=TOP_N)
-            engine_used = 'adaptive'
-            ai_engine.move_count += 1  # Increment for adaptive AI moves too
-            
-            # Get evaluation from our adaptive AI when Stockfish unavailable
-            if stockfish_eval is None:
+        
+        # CRITICAL FIX: Check for immediate king captures first
+        legal_moves = list(board.legal_moves)
+        king_capture_moves = []
+        
+        for move in legal_moves:
+            target_piece = board.piece_at(move.to_square)
+            if target_piece and target_piece.piece_type == chess.KING:
+                king_capture_moves.append(move)
+                print(f"[CRITICAL] Stockfish found king capture move: {move.uci()}")
+        
+        # Always prioritize king captures over Stockfish analysis
+        if king_capture_moves:
+            move = random.choice(king_capture_moves)
+            engine_used = 'king_capture_priority'
+            print(f"[CRITICAL] Prioritizing king capture: {move.uci()}")
+            # Get Stockfish evaluation for the king capture move
+            if stockfish_engine:
                 try:
-                    ai_eval = ai_engine.evaluate_board(board)
-                    stockfish_eval = ai_eval / 10  # Scale down to centipawn-like values
-                    print(f"[INFO] Using adaptive AI evaluation: {stockfish_eval}")
+                    result = stockfish_engine.analyse(board, chess.engine.Limit(time=0.1))
+                    if isinstance(result, dict) and 'score' in result:
+                        stockfish_eval = result['score'].white().score(mate_score=10000)
                 except Exception as e:
-                    print(f"[WARNING] Adaptive evaluation error: {e}")
-                    stockfish_eval = 0  # Neutral evaluation as fallback
+                    print("[WARNING] Stockfish evaluation error on king capture:", e)
+                    stockfish_eval = 999999  # Assume mate value for king capture
         else:
-            # Increment move count for Stockfish moves (except first move which was already incremented)
-            if not is_first_ai_move:
-                ai_engine.move_count += 1
+            # For subsequent moves without king captures, use Stockfish strategically
+            if stockfish_engine:
+                try:
+                    result = stockfish_engine.analyse(board, chess.engine.Limit(time=0.5), multipv=TOP_N)
+                    top_moves = []
+                    eval_score = None
+
+                    if isinstance(result, list):
+                        for r in result:
+                            try:
+                                if 'pv' in r and r['pv'] and isinstance(r['pv'][0], chess.Move):
+                                    top_moves.append(r['pv'][0])
+                                if eval_score is None and 'score' in r:
+                                    eval_score = r['score'].white().score(mate_score=10000)
+                            except Exception:
+                                continue
+                    elif isinstance(result, dict):
+                        if 'pv' in result and result['pv'] and isinstance(result['pv'][0], chess.Move):
+                            top_moves.append(result['pv'][0])
+                        if 'score' in result:
+                            eval_score = result['score'].white().score(mate_score=10000)
+                    
+                    if top_moves:
+                        move = random.choice(top_moves)
+                        engine_used = 'stockfish'
+                    else:
+                        move = None
+                    stockfish_eval = eval_score
+                except Exception as e:
+                    print("[WARNING] Stockfish error:", e)
+                    move = None
+
+            # Fallback to adaptive AI if Stockfish fails
+            if not move:
+                move = ai_engine.get_ai_move(board, randomize=True, top_n=TOP_N)
+                engine_used = 'adaptive'
+                ai_engine.move_count += 1  # Increment for adaptive AI moves too
+                
+                # Get evaluation from our adaptive AI when Stockfish unavailable
+                if stockfish_eval is None:
+                    try:
+                        ai_eval = ai_engine.evaluate_board(board)
+                        stockfish_eval = ai_eval / 10  # Scale down to centipawn-like values
+                        print(f"[INFO] Using adaptive AI evaluation: {stockfish_eval}")
+                    except Exception as e:
+                        print(f"[WARNING] Adaptive evaluation error: {e}")
+                        stockfish_eval = 0  # Neutral evaluation as fallback
+            else:
+                # Increment move count for Stockfish moves (except first move which was already incremented)
+                if not is_first_ai_move:
+                    ai_engine.move_count += 1
         
         print(f"[DEBUG] Strategic move selected: {move.uci() if move else 'None'}")
 
