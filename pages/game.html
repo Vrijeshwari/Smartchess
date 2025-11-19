@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartChess Game</title>
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/layout.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/modals.css">
+    <link rel="stylesheet" href="../css/themes.css">
+    <link rel="stylesheet" href="../css/animations.css">
+</head>
+<body>
+    <div id="gameWrapper">
+        <div class="game-container">
+        <!-- Left Side Panel -->
+        <div class="left-panel">
+            <!-- In-game controls moved to right panel -->
+            
+            <div class="panel-section">
+                <h3>📊 Game Status</h3>
+                <div class="current-player" id="currentPlayer">Current Player: White</div>
+                <div class="game-status" id="gameStatus">Game in progress</div>
+                <div class="outcome-prediction" id="outcomePrediction">Analyzing position...</div>
+                <div class="prediction-confidence" id="predictionConfidence"></div>
+            </div>
+            
+            <div class="panel-section">
+                <h3>💬 Move Feedback</h3>
+                <div class="feedback-content" id="feedbackContent">Make your move!</div>
+            </div>
+            
+            <div class="panel-section">
+                <h3>🏆 Captured Pieces</h3>
+                <div class="captured-pieces">
+                    <div>White: <span class="captured-white" id="capturedWhite"></span></div>
+                    <div>Black: <span class="captured-black" id="capturedBlack"></span></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Center Board Area -->
+        <div class="center-area">
+            <div class="board-wrapper">
+                <div class="rank-numbers">
+                    <div>8</div><div>7</div><div>6</div><div>5</div>
+                    <div>4</div><div>3</div><div>2</div><div>1</div>
+                </div>
+                <div class="chess-board" id="chessBoard"></div>
+            </div>
+            <div class="coordinates">
+                <div>a</div><div>b</div><div>c</div><div>d</div>
+                <div>e</div><div>f</div><div>g</div><div>h</div>
+            </div>
+        </div>
+        
+        <!-- Right Side Panel -->
+        <div class="right-panel">
+            <div class="panel-section">
+                <h3>🤖 AI Explanation</h3>
+                <div class="explanation-content" id="explanationContent">Waiting for AI move...</div>
+            </div>
+            
+            <div class="panel-section">
+                <h3>💡 Move Suggestion</h3>
+                <div class="suggestion-content" id="suggestionContent">Click Hint for move suggestion</div>
+                <button class="apply-suggestion-btn" onclick="applySuggestion()" style="display: none;">Apply Move</button>
+            </div>
+            
+            <!-- In-Game Controls moved from left panel -->
+            <div class="panel-section">
+                <h3>🎮 In-Game Controls</h3>
+                <div class="in-game-controls">
+                    <button class="suggest-btn" onclick="showMoveSuggestion()">💡 Hint</button>
+                    <button class="quit-btn" onclick="quitGame()">🚪 Quit Game</button>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="inGameMusicToggle" onchange="toggleMusic()">
+                        <span class="slider"></span>
+                        <span class="toggle-label">Background Music</span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Removed separate Background Music panel -->
+        </div>
+        
+        <!-- NEW: Quit Confirmation Modal -->
+        <div id="quitConfirmationModal" class="modal">
+            <div class="modal-content">
+                <h2>Quit Game</h2>
+                <p>Are you sure you want to quit the current game?</p>
+                <div class="modal-buttons">
+                    <button class="quit-confirm-btn" onclick="confirmQuitGame()">Yes, Quit</button>
+                    <button class="close-btn" onclick="cancelQuitGame()">No, Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Castling Confirmation Modal -->
+        <div id="castlingConfirmationModal" class="modal">
+            <div class="modal-content">
+                <h2>Confirm Castling</h2>
+                <p id="castlingMessage">You are about to castle. Confirm to complete the rook move.</p>
+                <div class="modal-buttons">
+                    <button class="confirm-btn" id="confirmCastlingBtn">Confirm</button>
+                    <button class="close-btn" id="cancelCastlingBtn">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <!-- Removed from game.html, now in index.html -->
+    </div>
+
+    <!-- Game Statistics Modal (OUTSIDE gameWrapper for proper z-index/stacking) -->
+    <div id="gameStatisticsModal" class="modal">
+        <div class="modal-content">
+            <h2>Game Over!</h2>
+            <div id="gameOutcome" class="game-outcome"></div>
+            <div class="stats-section">
+                <h3>Final Statistics</h3>
+                <p>Moves: <span id="finalMoves"></span></p>
+                <p>You Captured: <span id="finalUserCaptured"></span></p>
+                <p>AI Captured: <span id="finalAICaptured"></span></p>
+                <p>Blunders: <span id="finalBlunders"></span></p>
+                <p>CPL: <span id="finalCPL"></span></p>
+                <p>ELO: <span id="finalELO"></span></p>
+            </div>
+            <!-- Update these lines in game.html -->
+<div class="modal-buttons">
+    <button class="reset-btn" onclick="window.startNewGameFromStats(); closeGameStatistics();">Play Again</button>
+    <button class="close-btn" onclick="closeGameStatistics(); setTimeout(() => { window.location.href = 'index.html'; }, 300);">Go to Home</button>
+</div>
+        </div>
+    </div>
+    
+    <!-- Audio Elements -->
+    <audio id="backgroundMusic" loop preload="auto">
+        <source src="../BackgroundMusic.mp3" type="audio/mp3">
+    </audio>
+
+    <!-- Move Sound Effect -->
+    <audio id="moveSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBz2G0fPTgjMGHm7A7+OZURE="></source>
+    </audio>
+
+    <!-- Capture Sound Effect -->
+    <audio id="captureSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBz2G0fPTgjMGHm7A7+OZURE="></source>
+    </audio>
+
+    <!-- Check Sound Effect -->
+    <audio id="checkSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRq4HAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQwHAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBz2G0fPTgjMGHm7A7+OZURQ="></source>
+    </audio>
+
+    <!-- Victory Sound Effect -->
+    <audio id="victorySound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRq4HAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQwHAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBz2G0fPTgjMGHm7A7+OZURQ="></source>
+    </audio>
+
+    <script type="module" src="../js/main.js"></script>
+</body>
+</html>

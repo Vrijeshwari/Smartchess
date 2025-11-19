@@ -1,0 +1,73 @@
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { 
+        opacity: 0;
+        transform: translateY(-50px) scale(0.9);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Victory effects */
+.victory-player {
+    animation: victoryPulse 1s ease-in-out infinite alternate;
+}
+
+.victory-ai {
+    animation: defeatShake 0.5s ease-in-out;
+}
+
+@keyframes victoryPulse {
+    from { 
+        transform: scale(1);
+        text-shadow: 2px 2px 4px var(--success-bg-color, rgba(76, 175, 80, 0.6)); /* Use theme variable */
+    }
+    to { 
+        transform: scale(1.1);
+        text-shadow: 4px 4px 8px var(--success-text-color, rgba(76, 175, 80, 0.8)); /* Use theme variable */
+    }
+}
+
+@keyframes defeatShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+@keyframes feedbackBounce {
+    0% { 
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.3);
+    }
+    50% { 
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+    100% { 
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+@keyframes blunderShake {
+    0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+    10%, 30%, 50%, 70%, 90% { transform: translate(-50%, -50%) rotate(-5deg); }
+    20%, 40%, 60%, 80% { transform: translate(-50%, -50%) rotate(5deg); }
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glow {
+    from { text-shadow: 0 0 5px var(--h3-color), 0 0 10px var(--h3-color); } /* Use theme variables */
+    to { text-shadow: 0 0 10px var(--h3-color), 0 0 20px var(--outcome-prediction-bg); } /* Use theme variables */
+}

@@ -12,12 +12,44 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from collections import deque
 import numpy as np
+import csv
 
 # Ensure better randomization
 random.seed(int(time.time()))
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*", "allow_headers": "*", "methods": ["GET", "POST", "OPTIONS", "PUT", "DELETE"]}}, supports_credentials=True)
+CORS(app, resources={r"/*": {"origins": ["http://127.0.0.1:5501"], "allow_headers": "*", "methods": ["GET", "POST", "OPTIONS", "PUT", "DELETE"]}}, supports_credentials=True)
+
+# --- Helper: Detect Why a Move is Illegal ---
+def get_illegal_move_reason(board, move_uci):
+    """
+    Simple helper to provide a reason for why a move is illegal.
+    Returns just a string message.
+    """
+    try:
+        move = chess.Move.from_uci(move_uci)
+        if move in board.legal_moves:
+            return ""
+        
+        from_sq = move.from_square
+        to_sq = move.to_square
+        from_piece = board.piece_at(from_sq)
+        
+        if from_piece is None:
+            return "No piece on source square."
+        if from_piece.color != board.turn:
+            return "Cannot move opponent's piece."
+        
+        test_board = board.copy()
+        test_board.push(move)
+        if test_board.is_check():
+            return "Move leaves your King in check."
+        
+        from_name = chess.square_name(from_sq)
+        to_name = chess.square_name(to_sq)
+        return f"Illegal move from {from_name} to {to_name}."
+    except:
+        return "Illegal move."
 
 # --- Move Quality Feedback Endpoint ---
 @app.route('/move-feedback', methods=['POST', 'OPTIONS'])
@@ -25,43 +57,95 @@ def move_feedback():
     print("[DEBUG] /move-feedback endpoint hit")
     if request.method == 'OPTIONS':
         return '', 200
-    data = request.get_json()
-    print(f"[DEBUG] Incoming data: {data}")
-    fen = data.get('fen')
-    move_uci = data.get('move')
-    if not fen or not move_uci:
-        print("[DEBUG] Missing FEN or move in request data")
-        return jsonify({'error': 'FEN and move are required'}), 400
     try:
-        board = chess.Board(fen)
-        move = chess.Move.from_uci(move_uci)
+        data = request.get_json()
+        print(f"[DEBUG] Incoming data: {data}")
+        fen = data.get('fen')
+        move_uci = data.get('move')
+        if not fen or not move_uci:
+            print("[DEBUG] Missing FEN or move in request data")
+            return jsonify({'error': 'FEN and move are required'}), 400
+        
+        try:
+            board = chess.Board(fen)
+            move = chess.Move.from_uci(move_uci)
+        except Exception as e:
+            print(f"[ERROR] Failed to parse FEN or move: {e}")
+            return jsonify({'error': f'Invalid FEN or move format: {str(e)}'}), 400
+        
+        # Check if move is illegal
         if move not in board.legal_moves:
-            return jsonify({'error': 'Illegal move'}), 400
+            reason = get_illegal_move_reason(board, move_uci)
+            print(f"[ILLEGAL MOVE] {move_uci}: {reason}")
+            return jsonify({
+                'error': 'Illegal move',
+                'illegal_reason': reason,
+                'move': move_uci
+            }), 400
+
         # Evaluate before move
+        # No need to push/pop for eval_before, as `fen` is already the board state before the move
         if stockfish_engine:
-            eval_before = stockfish_engine.analyse(board, chess.engine.Limit(time=0.2))['score'].white().score(mate_score=10000)
+            res = analyze_with_retry(board, chess.engine.Limit(time=0.2))
+            try:
+                if isinstance(res, dict) and 'score' in res:
+                    eval_before = res['score'].white().score(mate_score=10000)
+                elif isinstance(res, list) and res and 'score' in res[0]:
+                    eval_before = res[0]['score'].white().score(mate_score=10000)
+            except Exception:
+                eval_before = 0
         else:
             eval_before = 0
+
         # Evaluate after move
-        board.push(move)
+        board.push(move) # This is where the user's move is actually applied for eval_after
         if stockfish_engine:
-            eval_after = stockfish_engine.analyse(board, chess.engine.Limit(time=0.2))['score'].white().score(mate_score=10000)
+            res = analyze_with_retry(board, chess.engine.Limit(time=0.2))
+            try:
+                if isinstance(res, dict) and 'score' in res:
+                    eval_after = res['score'].white().score(mate_score=10000)
+                elif isinstance(res, list) and res and 'score' in res[0]:
+                    eval_after = res[0]['score'].white().score(mate_score=10000)
+            except Exception:
+                eval_after = 0
         else:
             eval_after = 0
-        # Find best move
-        board.pop()
+        
+        # The board is currently in the state *after* the user's move. Pop to get back to original for best move analysis.
+        board.pop() 
+
         best_move = None
-        best_eval = eval_before
+        best_eval = eval_before # Initialize with eval_before, as best move is relative to this state
         if stockfish_engine:
-            best = stockfish_engine.analyse(board, chess.engine.Limit(time=0.2), multipv=3)
-            if isinstance(best, list):
-                best_move = best[0]['pv'][0].uci() if 'pv' in best[0] and best[0]['pv'] else None
-                best_eval = best[0]['score'].white().score(mate_score=10000)
-            elif isinstance(best, dict) and 'pv' in best and best['pv']:
-                best_move = best['pv'][0].uci()
-                best_eval = best['score'].white().score(mate_score=10000)
+            print(f"[DEBUG] Stockfish analysis for best move...")
+            try:
+                best = analyze_with_retry(board, chess.engine.Limit(time=0.2), multipv=3)
+                print(f"[DEBUG] Raw Stockfish best: {best}")
+                if isinstance(best, list) and best:
+                    best_info = best[0]
+                    if 'pv' in best_info and best_info['pv'] and isinstance(best_info['pv'][0], chess.Move):
+                        best_move = best_info['pv'][0].uci()
+                    if 'score' in best_info:
+                        try:
+                            best_eval = best_info['score'].white().score(mate_score=10000)
+                        except Exception:
+                            best_eval = None
+                elif isinstance(best, dict):
+                    if 'pv' in best and best['pv'] and isinstance(best['pv'][0], chess.Move):
+                        best_move = best['pv'][0].uci()
+                    if 'score' in best:
+                        try:
+                            best_eval = best['score'].white().score(mate_score=10000)
+                        except Exception:
+                            best_eval = None
+                else:
+                    print(f"[DEBUG] Stockfish analysis did not return expected format: {best}")
+            except Exception as e:
+                print(f"[WARNING] Error parsing Stockfish best move analysis: {e}")
+                best_move = None # Ensure best_move is explicitly None on error
+        
         # Calculate difference
-        diff = eval_after - best_eval
+        diff = eval_after - best_eval if best_eval is not None else 0 # Handle case where best_eval might be None
         # Label
         if abs(diff) < 30:
             label = 'Best'
@@ -82,7 +166,7 @@ def move_feedback():
         print(f"eval_before : {eval_before}")
         print(f"label       : {label}")
         print(f"your_move   : {move_uci}")
-        return jsonify({
+        resp = jsonify({
             'your_move': move_uci,
             'best_move': best_move,
             'eval_before': eval_before,
@@ -91,8 +175,14 @@ def move_feedback():
             'difference': diff,
             'label': label
         })
+        resp.headers.add('Access-Control-Allow-Origin', 'http://127.0.0.1:5501')
+        resp.headers.add('Access-Control-Allow-Credentials', 'true')
+        return resp
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"[EXCEPTION] /move-feedback caught exception: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
 
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestClassifier
@@ -135,8 +225,10 @@ class GameOutcomePredictor:
         # King safety (simplified)
         white_king_square = board.king(chess.WHITE)
         black_king_square = board.king(chess.BLACK)
-        white_king_attacks = len(board.attackers(chess.BLACK, white_king_square))
-        black_king_attacks = len(board.attackers(chess.WHITE, black_king_square))
+
+        # Handle cases where king might be missing (game over)
+        white_king_attacks = len(board.attackers(chess.BLACK, white_king_square)) if white_king_square else 0
+        black_king_attacks = len(board.attackers(chess.WHITE, black_king_square)) if black_king_square else 0
         
         features = {
             'material_advantage': white_material - black_material,
@@ -157,7 +249,7 @@ class GameOutcomePredictor:
             features = self.extract_position_features(board)
             
             # Simple heuristic if model not trained
-            if not self.is_trained:
+            if not self.is_trained or self.model is None:
                 material_diff = features[0]  # material_advantage
                 if material_diff > 3:
                     return 2, 0.8  # White likely wins
@@ -207,16 +299,23 @@ def train_elo_model(data_path="user_game_data.csv"):
         df = pd.read_csv(data_path)
         print(f"[DEBUG] CSV loaded: {len(df)} rows, columns: {df.columns.tolist()}")
         
-        # Use elo column if available, otherwise map from result
-        if 'elo' in df.columns:
+        # Check if we have the new format with estimated_elo column
+        if 'estimated_elo' in df.columns:
+            X = df[["blunders","cpl","moves"]]
+            y = df["estimated_elo"]
+            print(f"[DEBUG] Using estimated_elo column for training")
+        elif 'elo' in df.columns:
             X = df[["blunders","cpl","moves"]]
             y = df["elo"]
+            print(f"[DEBUG] Using elo column for training")
         else:
+            # Fallback to mapping from result
             result_map = {"1-0": 1400, "0-1": 1000, "1/2-1/2": 1200, "win": 1400, "loss": 1000, "draw": 1200}
             df = df[df["result"].isin(result_map.keys())]
             df["elo"] = df["result"].map(result_map)
             X = df[["blunders","cpl","moves"]]
             y = df["elo"]
+            print(f"[DEBUG] Using result mapping for training")
         
         if len(X) < 3:
             print(f"[DEBUG] Not enough data: {len(X)} rows")
@@ -244,6 +343,9 @@ def predict_elo(blunders, cpl, moves, model, feature_names):
         'moves': [moves]
     })
     
+    # Ensure X_pred columns match feature_names from training
+    X_pred = X_pred[feature_names] 
+
     elo_pred = model.predict(X_pred)[0]
     return float(elo_pred)
 
@@ -436,9 +538,10 @@ class AdaptiveAI:
             
         moves_scores = []
         try:
+            maximizing_player = (board.turn == self.color) # Determine if AI is maximizing or minimizing
             for move in board.legal_moves:
                 board.push(move)
-                score, _ = self.minimax(board, depth - 1, float("-inf"), float("inf"), False)
+                score, _ = self.minimax(board, depth - 1, float("-inf"), float("inf"), not maximizing_player) # Pass the correct maximizing/minimizing player
                 board.pop()
                 moves_scores.append((move, score))
         except Exception as e:
@@ -455,7 +558,7 @@ class AdaptiveAI:
         # Final fallback
         return random.choice(legal_moves)
 
-STOCKFISH_PATH = r"C:\\Users\\akash\\Downloads\\stockfish\\stockfish-windows-x86-64-avx2.exe"
+STOCKFISH_PATH = r"C:\\Users\\user\\Desktop\\Project\\SmartChess\\stockfish_engine\\stockfish-windows-x86-64-avx2\\stockfish\\stockfish-windows-x86-64-avx2.exe"
 
 def start_stockfish():
     try:
@@ -469,15 +572,65 @@ def start_stockfish():
 stockfish_engine = start_stockfish()
 ai_engine = AdaptiveAI()
 
+
+def analyze_with_retry(board, limit, multipv=None):
+    """Run engine analysis with a restart-on-failure policy.
+
+    Returns whatever `engine.analyse` returns, or None on failure.
+    If the engine has died, attempt to restart it once and retry the analysis.
+    """
+    global stockfish_engine
+    try:
+        if not stockfish_engine:
+            stockfish_engine = start_stockfish()
+            if not stockfish_engine:
+                return None
+
+        if multipv is not None:
+            return stockfish_engine.analyse(board, limit, multipv=multipv)
+        return stockfish_engine.analyse(board, limit)
+
+    except chess.engine.EngineTerminatedError as ete:
+        print(f"[WARNING] Stockfish EngineTerminatedError: {ete}. Attempting restart...")
+        try:
+            stockfish_engine = start_stockfish()
+            if not stockfish_engine:
+                return None
+            if multipv is not None:
+                return stockfish_engine.analyse(board, limit, multipv=multipv)
+            return stockfish_engine.analyse(board, limit)
+        except Exception as e:
+            print(f"[ERROR] Failed to restart/execute Stockfish after termination: {e}")
+            return None
+    except Exception as e:
+        print(f"[WARNING] Stockfish analysis error: {e}")
+        return None
+
 @app.route('/ai-move', methods=['POST', 'OPTIONS'])
 def ai_move():
     # --- Adaptive Difficulty: Calculate recent Elo and update AI ---
     try:
-        df = pd.read_csv("user_game_data.csv", names=["result","blunders","cpl","moves"])
-        result_map = {"1-0": 1400, "0-1": 1000, "1/2-1/2": 1200, "win": 1400, "loss": 1000, "draw": 1200}
-        df = df[df["result"].isin(result_map.keys())]
-        df["elo"] = df["result"].map(result_map)
-        recent_elo = df["elo"].tail(5).mean() if not df.empty else None
+        if os.path.exists("user_game_data.csv") and os.path.getsize("user_game_data.csv") > 0:
+            # Use a more robust CSV reader if issues persist
+            df = pd.read_csv("user_game_data.csv")
+            print(f"[DEBUG] CSV loaded: {len(df)} rows, columns: {df.columns.tolist()}")
+            
+            # Ensure columns exist before trying to access them
+            if 'estimated_elo' in df.columns and not df.empty:
+                recent_elo = df["estimated_elo"].tail(5).mean()
+                print(f"[DEBUG] Using estimated_elo for adaptive difficulty: {recent_elo}")
+            elif 'elo' in df.columns and not df.empty:
+                recent_elo = df["elo"].tail(5).mean()
+                print(f"[DEBUG] Using elo column for adaptive difficulty: {recent_elo}")
+            else:
+                print(f"[DEBUG] CSV has no valid Elo column or is empty, using default difficulty. Columns: {df.columns.tolist()}")
+                recent_elo = None
+        else:
+            recent_elo = None
+            print("[DEBUG] No CSV file or empty file, using default difficulty")
+    except pd.errors.EmptyDataError:
+        print("[WARNING] user_game_data.csv is empty, using default difficulty.")
+        recent_elo = None
     except Exception as e:
         print(f"[WARNING] Could not read user_game_data.csv for adaptive difficulty: {e}")
         recent_elo = None
@@ -489,12 +642,14 @@ def ai_move():
     fen = data.get('fen')
     last_player_move = data.get('last_move')
     is_new_game = data.get('is_new_game', False)
+    suggested_move = data.get('suggested_move', None)
 
     if not fen:
         return jsonify({'error': 'FEN not provided'}), 400
 
     try:
         board = chess.Board(fen)
+        # print(f"[DEBUG] Board turn after FEN initialization: {board.turn}")
     except Exception as e:
         return jsonify({'error': f'Invalid FEN: {str(e)}'}), 400
 
@@ -536,34 +691,36 @@ def ai_move():
     
     # More comprehensive new game detection
     is_very_early_game = total_moves_in_game <= 2  # First couple moves
-    is_reset_scenario = (is_new_game or is_starting_position or 
-                        (is_very_early_game and ai_engine.move_count > 2))
+    is_reset_scenario = (is_new_game or is_starting_position)
     
     print(f"[DEBUG] ========== MOVE REQUEST ==========")
-    print(f"[DEBUG] FEN: {fen}")
-    print(f"[DEBUG] Total moves in game: {total_moves_in_game}")
-    print(f"[DEBUG] Is starting position: {is_starting_position}")
-    print(f"[DEBUG] AI move count before check: {ai_engine.move_count}")
-    print(f"[DEBUG] is_new_game flag: {is_new_game}")
-    print(f"[DEBUG] is_very_early_game: {is_very_early_game}")
-    print(f"[DEBUG] is_reset_scenario: {is_reset_scenario}")
+    # print(f"[DEBUG] FEN: {fen}")
+    # print(f"[DEBUG] Total moves in game: {total_moves_in_game}")
+    # print(f"[DEBUG] Is starting position: {is_starting_position}")
+    # print(f"[DEBUG] AI move count before check: {ai_engine.move_count}")
+    # print(f"[DEBUG] is_new_game flag: {is_new_game}")
+    # print(f"[DEBUG] is_very_early_game: {is_very_early_game}")
+    # print(f"[DEBUG] is_reset_scenario: {is_reset_scenario}")
     
     # CRITICAL FIX: Reset AI state for new games
-    if is_reset_scenario:
+    if is_new_game: # Only reset if frontend explicitly indicates new game
         ai_engine.reset()
-        print(f"[INFO] *** GAME RESET *** - Reason: new_game={is_new_game}, starting_pos={is_starting_position}, early_game={is_very_early_game}")
+        print(f"[INFO] *** GAME RESET *** - Reason: new_game={is_new_game}")
     else:
         print(f"[INFO] Continuing game (Total moves: {total_moves_in_game}, AI moves: {ai_engine.move_count})")
 
-    # Register player move for profiling
-    if last_player_move:
+    # The board 'fen' is already the current state (after player's move).
+    # last_player_move is for profiling only, do NOT re-push it.
+    if last_player_move: # This is the player's move that led to the current FEN
         try:
+            # CRITICAL FIX: Permanently apply the player's move to the board
+            # so that `board.turn` is correctly set to black for AI analysis.
             board.push_uci(last_player_move)
             ai_engine.register_player_move(board)
-            board.pop()
+            # No board.pop() here, as the player's move needs to persist for AI's turn
         except Exception as ex:
             print(f"[WARNING] Invalid last_move provided: {ex}")
-
+    
     TOP_N = 3
     move = None
     engine_used = 'adaptive'
@@ -575,7 +732,11 @@ def ai_move():
     print(f"[DEBUG] After reset check - AI move_count: {ai_engine.move_count}")
     print(f"[DEBUG] is_first_ai_move: {is_first_ai_move}")
     
-    if is_first_ai_move:
+    if suggested_move:
+        print(f"[DEBUG] Applying suggested move: {suggested_move}")
+        move = chess.Move.from_uci(suggested_move)
+        engine_used = 'suggested'
+    elif is_first_ai_move:
         print(f"[DEBUG] *** MAKING FIRST AI MOVE ***")
         
         # For first move, make it completely random from ALL legal moves
@@ -610,20 +771,25 @@ def ai_move():
         
         print(f"[DEBUG] After first move selection, AI move_count: {ai_engine.move_count}")
         
-        # Get Stockfish evaluation for the random move
+        # Get Stockfish evaluation for the random move (quick analysis to avoid buffering)
         if stockfish_engine:
             try:
-                result = stockfish_engine.analyse(board, chess.engine.Limit(time=0.1))
-                if isinstance(result, dict) and 'score' in result:
-                    stockfish_eval = result['score'].white().score(mate_score=10000)
+                res = analyze_with_retry(board, chess.engine.Limit(time=0.2))
+                if isinstance(res, dict) and 'score' in res:
+                    stockfish_eval = res['score'].white().score(mate_score=10000)
+                elif isinstance(res, list) and res and 'score' in res[0]:
+                    stockfish_eval = res[0]['score'].white().score(mate_score=10000)
+                else:
+                    print(f"[WARNING] Stockfish did not return a score for first AI move: {res}")
             except Exception as e:
-                print("[WARNING] Stockfish evaluation error on random move:", e)
+                print(f"[ERROR] Error getting Stockfish eval for first AI move: {e}")
         
         selected_piece = board.piece_at(move.from_square)
         selected_piece_name = chess.piece_name(selected_piece.piece_type).title() if selected_piece else "Unknown"
         print(f"[INFO] AI selected RANDOM first move: {move.uci()} using {selected_piece_name} from {len(legal_moves)} total options")
     
     else:
+        # print(f"[DEBUG] Strategic move generation for turn: {board.turn}")
         print(f"[DEBUG] Making strategic move (not first move)")
         
         # CRITICAL FIX: Check for immediate king captures first
@@ -644,9 +810,9 @@ def ai_move():
             # Get Stockfish evaluation for the king capture move
             if stockfish_engine:
                 try:
-                    result = stockfish_engine.analyse(board, chess.engine.Limit(time=0.1))
-                    if isinstance(result, dict) and 'score' in result:
-                        stockfish_eval = result['score'].white().score(mate_score=10000)
+                    res = analyze_with_retry(board, chess.engine.Limit(time=0.1))
+                    if isinstance(res, dict) and 'score' in res:
+                        stockfish_eval = res['score'].white().score(mate_score=10000)
                 except Exception as e:
                     print("[WARNING] Stockfish evaluation error on king capture:", e)
                     stockfish_eval = 999999  # Assume mate value for king capture
@@ -654,7 +820,7 @@ def ai_move():
             # For subsequent moves without king captures, use Stockfish strategically
             if stockfish_engine:
                 try:
-                    result = stockfish_engine.analyse(board, chess.engine.Limit(time=0.5), multipv=TOP_N)
+                    result = analyze_with_retry(board, chess.engine.Limit(time=0.3), multipv=TOP_N)
                     top_moves = []
                     eval_score = None
 
@@ -680,7 +846,7 @@ def ai_move():
                         move = None
                     stockfish_eval = eval_score
                 except Exception as e:
-                    print("[WARNING] Stockfish error:", e)
+                    print(f"[WARNING] Stockfish error during strategic analysis: {e}")
                     move = None
 
             # Fallback to adaptive AI if Stockfish fails
@@ -700,14 +866,15 @@ def ai_move():
                         stockfish_eval = 0  # Neutral evaluation as fallback
             else:
                 # Increment move count for Stockfish moves (except first move which was already incremented)
-                if not is_first_ai_move:
+                # Ensure we only increment if the move was indeed selected by stockfish and not a fallback
+                if engine_used == 'stockfish' and not is_first_ai_move: 
                     ai_engine.move_count += 1
         
         print(f"[DEBUG] Strategic move selected: {move.uci() if move else 'None'}")
 
-    # Safety check with fallback
-    if not isinstance(move, chess.Move):
-        print("ERROR: move type is not chess.Move! Received:", type(move), move)
+    # Safety check with fallback - ensure move is a valid chess.Move object
+    if not isinstance(move, chess.Move) or move not in board.legal_moves:
+        print("ERROR: Selected move is not a legal chess.Move object or is None! Received:", type(move), move)
         print("[EMERGENCY] Generating fallback move...")
         
         # Emergency fallback: get ANY legal move
@@ -762,12 +929,14 @@ def ai_move():
         piece = board_before.piece_at(move.from_square)
         piece_name = chess.piece_name(piece.piece_type).title() if piece else "Piece"
         explanation = f"{piece_name} moved from {chess.square_name(move.from_square)} to {chess.square_name(move.to_square)}."
-        # Check for capture
-        captured = board_after.is_capture(move)
-        if captured:
-            captured_piece = board_before.piece_at(move.to_square)
-            if captured_piece:
+
+        # Determine if a piece was captured by checking the target square on board_before
+        captured_piece = board_before.piece_at(move.to_square)
+        # Guard against None values for piece or captured_piece
+        if captured_piece and piece and getattr(captured_piece, 'color', None) is not None and getattr(piece, 'color', None) is not None:
+            if captured_piece.color != piece.color:
                 explanation += f" Captured {chess.piece_name(captured_piece.piece_type)}."
+        
         # Check for check
         if board_after.is_check():
             explanation += " This move gives check."
@@ -797,6 +966,28 @@ def ai_move():
         print(f"[WARNING] Outcome prediction failed: {e}")
         outcome_pred, outcome_conf, outcome_text = 1, 0.5, "Position unclear"
 
+    # CHECK FOR CHECKMATE OR STALEMATE AFTER AI MOVE
+    game_over = False
+    game_over_reason = None
+    game_winner = None
+    
+    if not board.legal_moves or board.is_game_over():
+        if board.is_checkmate():
+            game_over = True
+            game_over_reason = 'checkmate'
+            game_winner = 'white' if board.turn == chess.BLACK else 'black'
+            print(f"[GAME OVER] AI Move resulted in Checkmate! Winner: {game_winner}")
+        elif board.is_stalemate():
+            game_over = True
+            game_over_reason = 'stalemate'
+            game_winner = 'draw'
+            print(f"[GAME OVER] AI Move resulted in Stalemate!")
+        else:
+            game_over = True
+            game_over_reason = 'game_over'
+            game_winner = 'draw'
+            print(f"[GAME OVER] AI Move resulted in game over - other condition")
+
     response = {
         'move': move.uci(),
         'fen': board.fen(),
@@ -812,13 +1003,19 @@ def ai_move():
         'position_analysis': {
             'material_balance': 'Check /predict-outcome for detailed analysis',
             'recommended_strategy': 'Focus on ' + ('attack' if outcome_pred == 2 else 'defense' if outcome_pred == 0 else 'balanced play')
-        }
+        },
+        'game_over': game_over,
+        'reason': game_over_reason,
+        'winner': game_winner
     }
     
     print(f"[DEBUG] ========== FINAL RESPONSE ==========")
     print("AI Response:", response)
     print(f"[DEBUG] ====================================")
-    return jsonify(response)
+    resp = jsonify(response)
+    resp.headers.add('Access-Control-Allow-Origin', 'http://127.0.0.1:5501')
+    resp.headers.add('Access-Control-Allow-Credentials', 'true')
+    return resp
 
 # Add a manual reset endpoint for debugging
 @app.route('/force-reset', methods=['POST', 'OPTIONS'])
@@ -964,40 +1161,152 @@ def save_game_data():
         return jsonify({'error': 'No data provided'}), 400
     
     try:
-        # Extract game data
+        # Extract game data with proper attribute names
         result = data.get('result', 'draw')
         blunders = data.get('blunders', 0)
         cpl = data.get('cpl', 0)
         moves = data.get('moves', 1)
+        captured_by_player = data.get('captured_by_player', 0)
+        captured_by_ai = data.get('captured_by_ai', 0)
+        estimated_elo = data.get('estimated_elo', 1200)
         
-        # Estimate Elo based on performance
-        if result == 'win':
-            estimated_elo = 1200 + (50 - blunders * 10) - (cpl * 2)
-        elif result == 'loss':
-            estimated_elo = 1000 + (30 - blunders * 8) - (cpl * 1.5)
-        else:  # draw
-            estimated_elo = 1150 + (40 - blunders * 9) - (cpl * 1.8)
+        # Ensure CSV file has headers if it's empty or doesn't exist
+        csv_file = 'user_game_data.csv'
+        file_exists = os.path.exists(csv_file)
         
-        estimated_elo = max(800, min(1600, estimated_elo))  # Clamp between 800-1600
+        # Check if file is empty or doesn't have headers
+        if not file_exists or os.path.getsize(csv_file) == 0:
+            # Create CSV with headers
+            with open(csv_file, 'w', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow([
+                    'result', 'blunders', 'cpl', 'moves', 
+                    'captured_by_player', 'captured_by_ai', 'estimated_elo'
+                ])
         
-        # Save to CSV
-        import csv
-        with open('user_game_data.csv', 'a', newline='') as f:
+        # Save to CSV with proper attributes
+        with open(csv_file, 'a', newline='') as f:
             writer = csv.writer(f)
-            writer.writerow([result, blunders, cpl, moves, round(estimated_elo)])
+            writer.writerow([
+                result, blunders, cpl, moves, 
+                captured_by_player, captured_by_ai, round(estimated_elo)
+            ])
+        
+        print(f"[GAME DATA SAVED] Result: {result}, Blunders: {blunders}, CPL: {cpl}, Moves: {moves}")
+        print(f"[GAME DATA SAVED] Captured by Player: {captured_by_player}, Captured by AI: {captured_by_ai}")
+        print(f"[GAME DATA SAVED] Estimated ELO: {estimated_elo}")
         
         return jsonify({
             'success': True, 
             'estimated_elo': round(estimated_elo),
-            'message': 'Game data saved successfully'
+            'message': 'Game data saved successfully with proper attributes'
         })
     except Exception as e:
+        print(f"[ERROR] Failed to save game data: {e}")
         return jsonify({'error': f'Failed to save game data: {e}'}), 500
 
 @atexit.register
 def cleanup():
     if stockfish_engine:
-        stockfish_engine.quit()
+        try:
+            stockfish_engine.quit()
+        except Exception as e:
+            print(f"[WARNING] Error quitting stockfish engine during cleanup: {e}")
+
+# @app.after_request
+# def after_request(response):
+#     response.headers.add('Access-Control-Allow-Origin', 'http://127.0.0.1:5501')
+#     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+#     response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS,PUT,DELETE')
+#     response.headers.add('Access-Control-Allow-Credentials', 'true')
+#     return response
+
+# --- Difficulty Setting Endpoint ---
+@app.route('/set-difficulty', methods=['POST', 'OPTIONS'])
+def set_difficulty():
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    data = request.get_json()
+    difficulty = data.get('difficulty', 'easy')
+    
+    # Update AI difficulty settings
+    if difficulty == 'easy':
+        ai_engine.adaptive_depth = 2
+        ai_engine.adaptive_randomness = True
+    elif difficulty == 'hard':
+        ai_engine.adaptive_depth = 4
+        ai_engine.adaptive_randomness = False
+    elif difficulty == 'difficult':
+        ai_engine.adaptive_depth = 5
+        ai_engine.adaptive_randomness = False
+    
+    print(f"[SETTINGS] Difficulty set to: {difficulty} (depth: {ai_engine.adaptive_depth}, random: {ai_engine.adaptive_randomness})")
+    
+    return jsonify({
+        'success': True,
+        'difficulty': difficulty,
+        'depth': ai_engine.adaptive_depth,
+        'randomness': ai_engine.adaptive_randomness
+    })
+
+# --- Move Suggestion Endpoint ---
+@app.route('/suggest-move', methods=['POST'])
+def suggest_move():
+    if request.method == 'OPTIONS':
+        response = app.make_response('')
+        response.headers.add('Access-Control-Allow-Origin', 'http://127.0.0.1:5501')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS,PUT,DELETE')
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+        return response
+    
+    data = request.get_json()
+    fen = data.get('fen')
+    
+    if not fen:
+        return jsonify({'error': 'FEN string required'}), 400
+    
+    try:
+        board = chess.Board(fen)
+        
+        if not board.legal_moves or board.is_game_over():
+            return jsonify({'error': 'No legal moves available'}), 400
+        
+        suggested_move = None
+        explanation = "No suggestion available"
+        
+        # Use Stockfish for best move suggestion
+        if stockfish_engine:
+            try:
+                result = analyze_with_retry(board, chess.engine.Limit(time=1.0), multipv=1)
+                if isinstance(result, list) and result:
+                    if 'pv' in result[0] and result[0]['pv']:
+                        suggested_move = result[0]['pv'][0].uci()
+                elif isinstance(result, dict) and 'pv' in result and result['pv']:
+                    suggested_move = result['pv'][0].uci()
+                
+                if suggested_move:
+                    explanation = "This is the best move according to the engine"
+            except Exception as e:
+                print(f"[WARNING] Stockfish suggestion failed: {e}")
+        
+        # Fallback to adaptive AI if Stockfish fails
+        if not suggested_move:
+            fallback_move = ai_engine.get_ai_move(board, randomize=False, top_n=1)
+            if fallback_move:
+                suggested_move = fallback_move.uci()
+                explanation = "AI suggests this move"
+        
+        return jsonify({
+            'suggested_move': suggested_move,
+            'explanation': explanation,
+            'engine': 'stockfish' if stockfish_engine and suggested_move else 'adaptive'
+        })
+        
+    except Exception as e:
+        print(f"[ERROR] Move suggestion failed: {e}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False, use_reloader=False)

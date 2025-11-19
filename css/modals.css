@@ -1,0 +1,256 @@
+/* Game End Modal Styles */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 2000;
+    inset: 0; /* top:0; right:0; bottom:0; left:0 */
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(2px);
+    animation: fadeIn 0.28s ease;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none; /* Do not capture clicks until shown */
+}
+
+/* When modal is shown, center content and allow pointer events */
+.modal.show {
+    display: flex;
+    pointer-events: auto;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal.show .modal-content {
+    pointer-events: auto;
+}
+
+/* Ensure all buttons within modals are clickable */
+.modal-content button {
+    pointer-events: auto;
+}
+
+.modal-content {
+    pointer-events: auto;
+    background: var(--panel-bg); /* Use theme variable */
+    padding: 28px; /* Consistent padding */
+    border: 1px solid var(--panel-border); /* Consistent border */
+    border-radius: 12px;
+    width: 92%;
+    max-width: 640px;
+    box-sizing: border-box;
+    max-height: 80vh;
+    overflow-y: auto;
+    margin: 0 auto;
+    text-align: center;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.25);
+    animation: slideIn 0.36s ease;
+    color: var(--text-color); /* Use theme variable */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.game-outcome {
+    font-size: clamp(1.5em, 4vw, 2.5em); /* Responsive font size */
+    font-weight: 800;
+    margin: 6px 0 4px 0;
+    letter-spacing: -0.2px;
+}
+
+.game-end-type {
+    font-size: clamp(0.8em, 2vw, 1.2em); /* Responsive font size */
+    color: var(--h3-color); /* Use theme variable */
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.stats-section {
+    background: var(--bg-medium); /* Use theme variable for background */
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px auto; 
+    width: 90%; 
+    max-width: 400px; 
+    font-size: 16px;
+    line-height: 1.6;
+    border: 2px solid var(--panel-border); /* Use theme variable */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Consistent shadow */
+    color: var(--text-color); /* Use theme variable */
+}
+
+.stats-section h3 {
+    font-size: clamp(1.1em, 2.5vw, 1.4em); /* Responsive font size */
+    color: var(--h3-color); /* Use theme variable */
+    margin-bottom: 15px;
+    border-bottom: 2px solid var(--h3-color); /* Consistent border */
+    padding-bottom: 10px;
+}
+
+.stats-section p {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: clamp(0.9em, 2vw, 1.1em); /* Responsive font size */
+}
+
+.stats-section p span {
+    font-weight: bold;
+    color: var(--text-color); /* Use theme variable */
+}
+
+.modal-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 25px;
+    width: 100%;
+    pointer-events: auto;
+}
+
+.modal-buttons .reset-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 25px;
+    font-size: clamp(0.9em, 2vw, 1em); /* Responsive font size */
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 120px;
+    background: var(--button-bg); /* Use theme variable */
+    color: var(--button-color); /* Use theme variable */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Consistent shadow */
+}
+
+.modal-buttons .reset-btn:hover {
+    transform: translateY(-2px);
+    background: var(--button-hover-bg); /* Use theme variable */
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4); /* Consistent shadow */
+}
+
+.modal-buttons .reset-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* Consistent shadow */
+}
+
+/* Settings Modal specific close button styling */
+.modal-buttons .close-btn {
+    padding: 12px 24px;
+    border: 2px solid var(--panel-border); /* Use theme variable */
+    border-radius: 25px;
+    font-size: clamp(0.9em, 2vw, 1em); /* Responsive font size */
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 120px;
+    background: var(--button-bg); /* Use theme variable */
+    color: var(--button-color); /* Use theme variable */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Consistent shadow */
+}
+
+.modal-buttons .close-btn:hover {
+    transform: translateY(-2px);
+    background: var(--button-hover-bg); /* Use theme variable */
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4); /* Consistent shadow */
+}
+
+.modal-buttons .close-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* Consistent shadow */
+}
+
+/* Styling for the Quit Confirmation Modal buttons */
+.modal-buttons .quit-confirm-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 25px;
+    font-size: clamp(0.9em, 2vw, 1em); /* Responsive font size */
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 120px;
+    background: var(--button-bg);
+    color: var(--button-color);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Consistent shadow */
+}
+
+.modal-buttons .quit-confirm-btn:hover {
+    transform: translateY(-2px);
+    background: var(--button-hover-bg);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4); /* Consistent shadow */
+}
+
+.modal-buttons .quit-confirm-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* Consistent shadow */
+}
+
+/* Confirm Button Styling (for Castling and other confirmations) */
+.modal-buttons .confirm-btn {
+    padding: 12px 28px;
+    border: none;
+    border-radius: 25px;
+    font-size: clamp(0.9em, 2vw, 1em); /* Responsive font size */
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 130px;
+    background: var(--button-bg); /* Use theme variable */
+    color: var(--button-color); /* Use theme variable */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Consistent shadow */
+    pointer-events: auto;
+}
+
+.modal-buttons .confirm-btn:hover {
+    transform: translateY(-2px);
+    background: var(--button-hover-bg); /* Use theme variable */
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4); /* Consistent shadow */
+}
+
+.modal-buttons .confirm-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* Consistent shadow */
+}
+
+/* Game Result Specific Styles */
+.game-outcome.win {
+    color: var(--success-text-color); /* Use theme variable */
+}
+
+.game-outcome.lose {
+    color: var(--error-text-color); /* Use theme variable */
+}
+
+.game-outcome.draw {
+    color: var(--warning-text-color); /* Use theme variable */
+}
+
+/* Close Button X Styling */
+.close-button {
+    cursor: pointer;
+    font-size: clamp(1.5em, 4vw, 1.8em); /* Responsive font size */
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    color: var(--text-color); /* Use theme variable */
+    transition: all 0.2s ease;
+    pointer-events: auto;
+    z-index: 10;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.close-button:hover {
+    color: var(--h3-color); /* Use theme variable */
+    transform: scale(1.1) rotate(90deg); /* Slightly less aggressive rotation */
+}
+
+.close-button:active {
+    transform: scale(0.95);
+}

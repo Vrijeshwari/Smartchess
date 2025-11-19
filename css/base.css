@@ -1,0 +1,17 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif; /* Using Roboto for a modern look */
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+    background: var(--bg-dark); /* Use CSS variable for theme */
+    color: var(--text-color); /* Default text color */
+    line-height: 1.6;
+    box-sizing: border-box;
+}

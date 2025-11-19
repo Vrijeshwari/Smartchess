@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Play SmartChess</title>
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/layout.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/modals.css">
+    <link rel="stylesheet" href="../css/themes.css">
+    <link rel="stylesheet" href="../css/animations.css">
+</head>
+<body class="content-page">
+    <div class="how-to-play-container content-container">
+        <h1>♟️ How to Play SmartChess</h1>
+        <p class="header-description">Master the fundamentals and learn the rules of chess</p>
+
+        <!-- Objective -->
+        <div class="objective-box">
+            🎯 <strong>Objective:</strong> Checkmate your opponent's king to win the game!
+        </div>
+
+        <!-- Introduction -->
+        <div class="content-section">
+            <div class="section-title">
+                <span class="section-icon">📖</span>
+                Welcome to Chess
+            </div>
+            <p style="font-size: 1.05em; line-height: 1.8; padding: 15px; background: var(--bg-medium); border-radius: 8px; border-left: 4px solid var(--h3-color);">
+                Chess is a timeless game of strategy and tactics played by two opponents on an 8x8 board. Each player controls 16 pieces and takes turns moving them according to specific rules. The goal is to checkmate your opponent's king—put it in a position where it's under attack (in check) and has no way to escape. With SmartChess, you can play against an AI opponent powered by the Stockfish engine, learn from detailed feedback, and improve your chess skills!
+            </p>
+        </div>
+
+        <!-- Piece Movements -->
+        <div class="content-section">
+            <div class="section-title">
+                <span class="section-icon">♞</span>
+                Piece Movements
+            </div>
+            <div class="pieces-grid">
+                <div class="piece-card">
+                    <strong>♙ Pawn</strong>
+                    <p><strong>Worth:</strong> 1 point</p>
+                    <p>Moves one square forward, or two squares on its first move. Captures only diagonally forward (one square). Can be promoted to any other piece when reaching the opposite end of the board. En passant capture is a special move where a pawn can capture an opponent's pawn that has just moved two squares forward.</p>
+                </div>
+                <div class="piece-card">
+                    <strong>♖ Rook</strong>
+                    <p><strong>Worth:</strong> 5 points</p>
+                    <p>Moves any number of squares horizontally or vertically along ranks and files, but cannot jump over other pieces. Powerful for controlling long distances and creating back rank threats. Two rooks working together are extremely strong in the endgame.</p>
+                </div>
+                <div class="piece-card">
+                    <strong>♘ Knight</strong>
+                    <p><strong>Worth:</strong> 3 points</p>
+                    <p>Moves in an 'L' shape: two squares in one direction, then one square perpendicular (or vice versa). The only piece that can jump over other pieces! Knights are excellent for creating forks and sudden tactical blows.</p>
+                </div>
+                <div class="piece-card">
+                    <strong>♗ Bishop</strong>
+                    <p><strong>Worth:</strong> 3 points</p>
+                    <p>Moves any number of squares diagonally, but cannot jump. Each bishop controls squares of only one color throughout the game—light-squared bishops can never reach dark squares and vice versa. Two bishops working together can deliver checkmate on the enemy king.</p>
+                </div>
+                <div class="piece-card">
+                    <strong>♕ Queen</strong>
+                    <p><strong>Worth:</strong> 9 points</p>
+                    <p>Moves any number of squares horizontally, vertically, or diagonally. The most powerful piece on the board! Combine the powers of the rook and bishop. A queen is worth about 9 pawns, making it invaluable in any position.</p>
+                </div>
+                <div class="piece-card">
+                    <strong>♔ King</strong>
+                    <p><strong>Worth:</strong> Priceless</p>
+                    <p>Moves one square in any direction. The most important piece—if your king is checkmated, you lose the game! Though it only moves one square, the king becomes very powerful in the endgame when few pieces remain on the board.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Rules -->
+        <div class="content-section">
+            <div class="section-title">
+                <span class="section-icon">⚔️</span>
+                Game Rules & Conditions
+            </div>
+            <div class="game-rules">
+                <div class="rule-box">
+                    <h3>♔ Check</h3>
+                    <p>When a king is under attack and threatened with capture, it is in 'check'. A player in check must immediately respond by: (1) moving the king to a safe square, (2) blocking the attack with another piece, or (3) capturing the attacking piece. You cannot ignore check—you must address it immediately!</p>
+                </div>
+                <div class="rule-box">
+                    <h3>♕ Checkmate</h3>
+                    <p>When a king is in check and has no legal moves to escape (the king cannot move to safety, no piece can block, and the attacking piece cannot be captured), it's 'checkmate'. The game ends immediately, and the player who delivered checkmate wins. Checkmate is the ultimate goal of the game!</p>
+                </div>
+                <div class="rule-box">
+                    <h3>🤝 Stalemate</h3>
+                    <p>If a player has no legal moves available, but their king is NOT in check, it's a 'stalemate'. The game is a draw—neither player wins or loses. Stalemate is an important concept because it can save a losing position from defeat.</p>
+                </div>
+                <div class="rule-box">
+                    <h3>🏰 Castling</h3>
+                    <p>A special move involving the king and rook. Requirements: (1) Neither piece has moved before, (2) The king is not in check, (3) The king does not move through or into check, (4) All squares between them are empty. When castling kingside, the king moves two squares toward the h-file rook; queenside castling goes toward the a-file rook. Castling is the only move that moves two pieces at once!</p>
+                </div>
+                <div class="rule-box">
+                    <h3>♟️ En Passant</h3>
+                    <p>A special pawn capture that occurs when an opponent's pawn advances two squares from its starting position and lands beside your pawn. You can capture it 'in passing' as if it had only moved one square—but only on your very next move! This rule prevents pawns from safely advancing two squares past an enemy pawn.</p>
+                </div>
+                <div class="rule-box">
+                    <h3>👑 Pawn Promotion</h3>
+                    <p>When a pawn reaches the opposite end of the board, it must be promoted to a queen, rook, bishop, or knight (usually a queen). The pawn is removed and replaced with the new piece immediately. Promotion is a powerful reward for advancing your pawns!</p>
+                </div>
+                <div class="rule-box">
+                    <h3>🔄 Threefold Repetition</h3>
+                    <p>If the same position occurs three times (not necessarily consecutively), either player can claim a draw. This rule prevents endless repetition in drawn positions.</p>
+                </div>
+                <div class="rule-box">
+                    <h3>📊 Fifty-Move Rule</h3>
+                    <p>If 50 consecutive moves are made by both players without a pawn move or capture, either player can claim a draw. This rule ensures games don't go on forever.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Board Setup -->
+        <div class="content-section">
+            <div class="section-title">
+                <span class="section-icon">🎮</span>
+                Board Setup & Starting Position
+            </div>
+            <p style="font-size: 1.05em; line-height: 1.8; padding: 15px; background: var(--bg-medium); border-radius: 8px; border-left: 4px solid var(--h3-color);">
+                The chess board is an 8x8 grid with 64 squares alternating between light and dark colors. The files (columns) are labeled a-h from left to right, and the ranks (rows) are labeled 1-8 from bottom to top from White's perspective. Each player starts with 16 pieces arranged in two rows: the back row contains (from left to right) rook, knight, bishop, queen, king, bishop, knight, rook, and the front row contains 8 pawns. White always moves first. The board should be oriented so that each player has a light square on their right.
+            </p>
+        </div>
+
+        <!-- Basic Strategy Tips -->
+        <div class="content-section">
+            <div class="section-title">
+                <span class="section-icon">💡</span>
+                Basic Strategy Tips for Beginners
+            </div>
+            <div class="game-rules">
+                <div class="rule-box">
+                    <h3>🎯 Control the Center</h3>
+                    <p>Try to place your pieces in the center of the board (d4, e4, d5, e5). Central squares give pieces more power and influence over the rest of the board.</p>
+                </div>
+                <div class="rule-box">
+                    <h3>🚀 Develop Your Pieces</h3>
+                    <p>In the opening, move your knights and bishops to active squares before moving the same piece twice. Get all your pieces into the game quickly so they can participate in the battle.</p>
+                </div>
+                <div class="rule-box">
+                    <h3>🏰 Protect Your King</h3>
+                    <p>Castle early to move your king to safety. A king trapped in the center is vulnerable to devastating attacks. Move pawns carefully in front of your king—they are its best defenders!</p>
+                </div>
+                <div class="rule-box">
+                    <h3>👀 Don't Lose Pieces</h3>
+                    <p>Before moving a piece, check if it's protected (defended by another piece). If an opponent's piece can capture it without penalty, don't move it there. Avoiding losing material is the first step to winning!</p>
+                </div>
+                <div class="rule-box">
+                    <h3>⚡ Look for Checks and Captures</h3>
+                    <p>Always look for forcing moves—checks (attacking the king) and captures (taking opponent's pieces). These moves limit your opponent's options and can create winning opportunities.</p>
+                </div>
+                <div class="rule-box">
+                    <h3>🎯 Avoid Blunders</h3>
+                    <p>Before playing a move, take a moment to check: Is my piece under attack? Can my opponent deliver checkmate? Am I walking into a trap? Avoiding blunders is more important than finding brilliant moves!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Turn Structure -->
+        <div class="content-section">
+            <div class="section-title">
+                <span class="section-icon">🔄</span>
+                Turn Structure & Movement Rules
+            </div>
+            <div class="game-rules">
+                <div class="rule-box">
+                    <h3>White Moves First</h3>
+                    <p>In chess, White always has the first move. This gives White a slight advantage in theory. After White moves, Black responds with a move, and they alternate turns throughout the game.</p>
+                </div>
+                <div class="rule-box">
+                    <h3>One Move Per Turn</h3>
+                    <p>Each player moves exactly one piece per turn (except castling, which is one move involving two pieces). You cannot pass your turn—you must move if any legal move exists.</p>
+                </div>
+                <div class="rule-box">
+                    <h3>Legal Move Requirement</h3>
+                    <p>All moves must be legal. A move is legal if: (1) the piece belongs to the player whose turn it is, (2) the piece moves according to its movement rules, (3) the move doesn't leave your king in check, and (4) no piece is jumped over (except knights).</p>
+                </div>
+                <div class="rule-box">
+                    <h3>Capturing Opponent Pieces</h3>
+                    <p>When you move a piece to a square occupied by an opponent's piece, you capture it. The opponent's piece is removed from the board and cannot be recovered. Captured pieces can be worth different amounts depending on their type.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Common Mistakes -->
+        <div class="content-section">
+            <div class="section-title">
+                <span class="section-icon">❌</span>
+                Common Beginner Mistakes
+            </div>
+            <div class="game-rules">
+                <div class="rule-box">
+                    <h3>Moving Into Check</h3>
+                    <p>You cannot move your king into check or leave it in check. If your king is in check, you must get it out immediately. Many beginners overlook checks and lose their king!</p>
+                </div>
+                <div class="rule-box">
+                    <h3>Hanging Pieces</h3>
+                    <p>"Hanging" a piece means leaving it undefended where it can be captured for free. Always check if your pieces are protected before moving them.</p>
+                </div>
+                <div class="rule-box">
+                    <h3>Back Rank Vulnerability</h3>
+                    <p>If your king is trapped on the back rank with no escape squares, be careful of back rank checkmate with a rook or queen. Leave an escape square for your king!</p>
+                </div>
+                <div class="rule-box">
+                    <h3>Moving the Queen Too Early</h3>
+                    <p>Attacking the queen with pawns or minor pieces can waste time. Develop your other pieces before bringing out your queen early.</p>
+                </div>
+                <div class="rule-box">
+                    <h3>Neglecting King Safety</h3>
+                    <p>Spending too much time attacking while your own king is vulnerable is dangerous. Balance attacking chances with defensive needs.</p>
+                </div>
+                <div class="rule-box">
+                    <h3>Ignoring Opponent's Threats</h3>
+                    <p>Before making an attacking move, always ask: "What is my opponent threatening?" Don't get so focused on your own plans that you miss dangerous threats.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Using SmartChess -->
+        <div class="content-section">
+            <div class="section-title">
+                <span class="section-icon">🤖</span>
+                Playing With SmartChess
+            </div>
+            <p style="font-size: 1.05em; line-height: 1.8; padding: 15px; background: var(--bg-medium); border-radius: 8px; border-left: 4px solid var(--h3-color);">
+                SmartChess provides an interactive chess experience where you play as White against the Stockfish AI engine (which plays as Black). Click on a piece to select it—legal moves will be highlighted. Click the destination square to move the piece. If you make an illegal move, the interface will tell you why. After you move, the AI will respond with its best move. You can use the "Hint" button to get a suggested move, analyze the board position, and see detailed feedback about your moves including whether they were strong or weak. Use SmartChess to practice and improve your chess skills against a challenging opponent!
+            </p>
+        </div>
+
+        <!-- Piece Values & Trading -->
+        <div class="content-section">
+            <div class="section-title">
+                <span class="section-icon">💰</span>
+                Piece Values & Trading
+            </div>
+            <p style="font-size: 1.05em; line-height: 1.8; padding: 15px; background: var(--bg-medium); border-radius: 8px; border-left: 4px solid var(--h3-color);">
+                Understanding piece values helps you make good trades. Generally: Pawn = 1 point, Knight = 3 points, Bishop = 3 points, Rook = 5 points, Queen = 9 points. The King is priceless! When you trade pieces, try to get equal or better value. For example, trading your rook (5 points) for two opponent pieces worth 3 and 2 points is a good trade. In the opening and middle game, keeping material equal is important. In the endgame, even tiny advantages can decide the game.
+            </p>
+        </div>
+
+        <!-- Notation & Recording Moves -->
+        <div class="content-section">
+            <div class="section-title">
+                <span class="section-icon">📝</span>
+                Chess Notation & Recording Moves
+            </div>
+            <div class="game-rules">
+                <div class="rule-box">
+                    <h3>Algebraic Notation</h3>
+                    <p>Chess moves are recorded using coordinates. Files (columns) are labeled a-h, and ranks (rows) are labeled 1-8. For example, "e4" means a pawn moves to the e-file, 4th rank. "Nf3" means a knight moves to f3. "O-O" represents kingside castling, and "O-O-O" represents queenside castling.</p>
+                </div>
+                <div class="rule-box">
+                    <h3>Move Symbols</h3>
+                    <p>Capture is shown with an "x" (e.g., "exd5" means pawn on e-file captures on d5). Check is marked with "+". Checkmate is marked with "#". "=" indicates promotion (e.g., "e8=Q" means pawn promotes to queen on e8).</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phase of the Game -->
+        <div class="content-section">
+            <div class="section-title">
+                <span class="section-icon">🎬</span>
+                The Three Phases of Chess
+            </div>
+            <div class="game-rules">
+                <div class="rule-box">
+                    <h3>🚀 Opening (Moves 1-12)</h3>
+                    <p>The opening is about controlling the center, developing your pieces, and protecting your king. Don't bring out your queen too early, and avoid moving the same piece repeatedly. Common opening principles apply to all positions.</p>
+                </div>
+                <div class="rule-box">
+                    <h3>⚔️ Middle Game (Moves 13-40)</h3>
+                    <p>This is where tactics and strategy shine. Look for attacking opportunities, tactical patterns, and positional advantages. Be alert for your opponent's threats while pursuing your own plans. This phase often decides the game!</p>
+                </div>
+                <div class="rule-box">
+                    <h3>👑 Endgame (Moves 40+)</h3>
+                    <p>With fewer pieces on the board, the king becomes active and can fight. Pawn promotion becomes critical. Precise calculation and technique matter greatly. Even small advantages can be converted into wins in the endgame.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tips for Improvement -->
+        <div class="content-section">
+            <div class="section-title">
+                <span class="section-icon">📈</span>
+                Tips for Improving Your Chess Skills
+            </div>
+            <div class="game-rules">
+                <div class="rule-box">
+                    <h3>Play Regularly</h3>
+                    <p>Practice playing games regularly. The more you play, the more experience you gain. Whether against AI or real opponents, consistent play is the best teacher.</p>
+                </div>
+                <div class="rule-box">
+                    <h3>Analyze Your Games</h3>
+                    <p>After each game, review what you did well and where you made mistakes. Look for tactical oversights and positional errors. Learning from losses is more valuable than celebrating wins.</p>
+                </div>
+                <div class="rule-box">
+                    <h3>Study Tactics Daily</h3>
+                    <p>Solve chess puzzles and tactical positions regularly. Tactics form the foundation of good chess. Spending 15-30 minutes daily on tactics greatly improves your playing strength.</p>
+                </div>
+                <div class="rule-box">
+                    <h3>Learn from Strong Players</h3>
+                    <p>Watch games by grandmasters and study their ideas. Understanding how strong players think and plan positions accelerates your learning. Many games are available online with analysis.</p>
+                </div>
+                <div class="rule-box">
+                    <h3>Focus on One Thing at a Time</h3>
+                    <p>Don't try to improve everything at once. Master one concept (like controlling the center or avoiding back rank mates) before moving to the next. Focused improvement is more effective than scattered effort.</p>
+                </div>
+                <div class="rule-box">
+                    <h3>Stay Patient</h3>
+                    <p>Chess improvement takes time. Don't get discouraged by losses—even grandmasters lose games! Every loss is a learning opportunity. With consistent effort, your playing strength will steadily improve.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ -->
+        <div class="content-section">
+            <div class="section-title">
+                <span class="section-icon">❓</span>
+                Frequently Asked Questions
+            </div>
+            <div class="game-rules">
+                <div class="rule-box">
+                    <h3>Can I take back a move?</h3>
+                    <p>In casual games, you can often take back moves by agreement. In formal competition, moves cannot be taken back. In SmartChess, moves are permanent once made, so think carefully before moving!</p>
+                </div>
+                <div class="rule-box">
+                    <h3>What if both players run out of pieces?</h3>
+                    <p>If both kings are alone with no other pieces, the game is a draw (insufficient material). Two knights, a bishop and knight, or single bishops cannot deliver checkmate, so these endgames are draws.</p>
+                </div>
+                <div class="rule-box">
+                    <h3>Can a pawn move backward?</h3>
+                    <p>No, pawns can only move forward (or diagonally forward to capture). This makes pawns weak but valuable for control. Once a pawn advances, it cannot retreat.</p>
+                </div>
+                <div class="rule-box">
+                    <h3>What happens if I'm in check?</h3>
+                    <p>You must get out of check immediately. Your only legal moves are those that remove the check (moving the king, blocking, or capturing the attacking piece). If no legal moves exist, it's checkmate and you lose.</p>
+                </div>
+                <div class="rule-box">
+                    <h3>Is castling always a good move?</h3>
+                    <p>Castling is usually good for king safety and rook connection, especially early. However, don't castle into an attack. If your opponent has dangerous pieces nearby, castling might be unsafe. Always consider the position.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Background Music Audio Element -->
+    <audio id="backgroundMusic" loop preload="auto">
+        <source src="../BackgroundMusic.mp3" type="audio/mp3">
+    </audio>
+    <script type="module" src="../js/main.js"></script>
+</body>
+</html>

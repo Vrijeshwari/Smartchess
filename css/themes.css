@@ -1,0 +1,286 @@
+/* Dark Mode Styles */
+:root {
+    --bg-light: #F5F5DC;
+    --bg-medium: linear-gradient(135deg, #F5F5DC 0%, #F0E68C 100%);
+    --bg-dark: linear-gradient(135deg, #8B7355 0%, #A68A6B 50%, #8B7355 100%);
+    --panel-bg: #FFFFFF;
+    --panel-border: #8B7355;
+    --text-color: #5D4E37;
+    --h3-color: #8B7355;
+    --button-bg: linear-gradient(45deg, #8B7355, #A68A6B);
+    --button-color: white;
+    --button-hover-bg: linear-gradient(45deg, #A68A6B, #8B7355);
+    --toggle-slider-checked: linear-gradient(45deg, #F0E68C, #A68A6B);
+    --light-square: #f0d9b5;
+    --dark-square: #b58863;
+    --selected-square: #90EE90;
+    --valid-move-square: #FFE4B5;
+    --outcome-prediction-bg: #F0E68C;
+    --outcome-prediction-border: #8B7355;
+    --captured-pieces-bg: #F0E68C;
+    --captured-pieces-border: #8B7355;
+    --game-title-gradient: linear-gradient(45deg, #F0E68C, #FFFFFF);
+    --success-bg-color: #C8E6C9;
+    --success-text-color: #2E7D32;
+    --error-bg-color: #FFCDD2;
+    --error-text-color: #C62828;
+    --warning-bg-color: #FFF9C4;
+    --warning-text-color: #F57F17;
+}
+
+body.dark-mode {
+    --bg-light: #4a5a49; /* Darker green for main background */
+    --bg-medium: linear-gradient(135deg, #4a5a49 0%, #5a6b59 100%); /* Panels */
+    --bg-dark: linear-gradient(135deg, #3d4a3c 0%, #4a5a49 50%, #3d4a3c 100%); /* Body background */
+    --panel-bg: #5a6b59; /* Panels background - matching dark square */
+    --panel-border: #a68a6b; /* Muted gold/bronze for borders */
+    --text-color: #eeeed2; /* Light cream/off-white for general text */
+    --h3-color: #e0d38c; /* Desaturated gold/yellow for headings */
+    --button-bg: linear-gradient(45deg, #6a7b69, #7b8c7a); /* Darker green gradient for buttons */
+    --button-color: #eeeed2; /* Light cream/off-white for button text */
+    --button-hover-bg: linear-gradient(45deg, #7b8c7a, #6a7b69); /* Slightly lighter on hover */
+    --toggle-slider-checked: linear-gradient(45deg, #a68a6b, #8b7355); /* Gold/brown for checked toggle */
+    --light-square: #eeeed2; /* Light square color from chess board */
+    --dark-square: #769656; /* Dark square color from chess board */
+    --selected-square: #a0c284; /* Selected square highlight */
+    --valid-move-square: #c2a084; /* Valid move highlight */
+    --outcome-prediction-bg: #6a7b69; /* Background for prediction */
+    --outcome-prediction-border: #f0e68c; /* Gold border for prediction */
+    --captured-pieces-bg: #6a7b69; /* Background for captured pieces */
+    --captured-pieces-border: #f0e68c; /* Border for captured pieces */
+    --game-title-gradient: linear-gradient(45deg, #eeeed2, #f0e68c);
+    --success-bg-color: #4CAF50;
+    --success-text-color: white;
+    --error-bg-color: #D32F2F;
+    --error-text-color: white;
+    --warning-bg-color: #FFC107;
+    --warning-text-color: black;
+
+    /* Specific adjustments for dark mode */
+    .game-title {
+        -webkit-text-fill-color: unset; /* Allow text-fill-color to be set by color property */
+        color: var(--h3-color); /* Use h3-color for game title in dark mode */
+    }
+    .tagline {
+        color: var(--text-color); /* Use text-color for tagline in dark mode */
+    }
+    .start-game-btn {
+        color: var(--button-color); /* Adjust start game button text color */
+    }
+    .toggle-label {
+        color: var(--text-color); /* Adjust toggle label color in dark mode */
+    }
+    .settings-btn-top-right {
+        color: var(--h3-color); /* Gold color for icon */
+    }
+}
+
+/* Apply variables to existing styles */
+body {
+    background: var(--bg-dark);
+}
+
+.game-container {
+    background: var(--bg-light);
+    border-color: var(--panel-border);
+}
+
+.left-panel,
+.right-panel {
+    background: var(--bg-medium);
+    border-color: var(--panel-border);
+}
+
+.panel-section {
+    background: var(--panel-bg);
+    border-color: var(--panel-border);
+    color: var(--text-color);
+}
+
+.panel-section h3 {
+    color: var(--h3-color);
+    border-color: var(--outcome-prediction-bg); /* Use a consistent color for borders */
+}
+
+.current-player {
+    color: var(--h3-color);
+}
+
+.game-status {
+    color: var(--text-color);
+}
+
+.outcome-prediction {
+    background: var(--outcome-prediction-bg);
+    border-left-color: var(--outcome-prediction-border);
+    color: var(--text-color);
+}
+
+.prediction-confidence {
+    color: var(--h3-color);
+}
+
+.chess-board {
+    border-color: var(--panel-border);
+}
+
+.square.light {
+    background-color: var(--light-square);
+}
+
+.square.dark {
+    background-color: var(--dark-square);
+}
+
+.square.selected {
+    background-color: var(--selected-square) !important;
+}
+
+.square.valid-move {
+    background-color: var(--valid-move-square) !important;
+}
+
+.piece {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Keep shadow for contrast */
+}
+
+.coordinates,
+.rank-numbers {
+    color: var(--text-color);
+}
+
+.captured-pieces div {
+    background: var(--captured-pieces-bg);
+    border-color: var(--captured-pieces-border);
+    color: var(--text-color);
+}
+
+.captured-pieces div span {
+    color: var(--text-color); /* Use general text color for consistency */
+}
+
+.modal-content {
+    background: var(--bg-dark);
+    color: var(--text-color);
+}
+
+.stats-section {
+    background: var(--panel-bg);
+    border-color: var(--panel-border);
+    color: var(--text-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Adjust shadow for dark mode contrast */
+}
+
+.stats-section h3 {
+    color: var(--h3-color);
+    border-color: var(--outcome-prediction-bg);
+}
+
+.stats-section p span {
+    color: var(--h3-color);
+}
+
+.modal-buttons .reset-btn {
+    background: var(--button-bg);
+    color: var(--button-color);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); /* Adjust shadow for dark mode contrast */
+}
+
+.modal-buttons .reset-btn:hover {
+    background: var(--button-hover-bg);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5); /* Adjust shadow for dark mode contrast */
+}
+
+.modal-buttons .close-btn {
+    background: var(--button-bg);
+    color: var(--button-color);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); /* Adjust shadow for dark mode contrast */
+}
+
+.modal-buttons .close-btn:hover {
+    background: var(--button-hover-bg);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5); /* Adjust shadow for dark mode contrast */
+}
+
+.modal-buttons .quit-confirm-btn {
+    background: var(--button-bg);
+    color: var(--button-color);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); /* Adjust shadow for dark mode contrast */
+}
+
+.modal-buttons .quit-confirm-btn:hover {
+    background: var(--button-hover-bg);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5); /* Adjust shadow for dark mode contrast */
+}
+
+.settings-section h3 {
+    color: var(--h3-color);
+}
+
+.difficulty-btn {
+    border-color: var(--panel-border);
+    background: var(--panel-bg);
+    color: var(--text-color);
+}
+
+.difficulty-btn.active {
+    background: var(--toggle-slider-checked);
+    color: var(--text-color);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3); /* Adjust shadow for dark mode contrast */
+}
+
+.difficulty-btn:hover {
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4); /* Adjust shadow for dark mode contrast */
+    background: var(--button-hover-bg); /* Use hover background variable */
+    color: var(--button-color); /* Use button color variable */
+}
+
+.slider {
+    background: var(--panel-border);
+}
+
+.toggle-switch input:checked + .slider {
+    background: var(--toggle-slider-checked);
+}
+
+.toggle-label {
+    color: var(--text-color);
+}
+
+.start-panel {
+    background: var(--bg-dark);
+    color: var(--text-color);
+    text-shadow: none; /* Remove text-shadow in dark mode */
+}
+
+.game-title {
+    background: var(--game-title-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.tagline {
+    color: var(--text-color);
+}
+
+.start-game-btn {
+    background: var(--button-bg);
+    color: var(--button-color);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4); /* Adjust shadow for dark mode contrast */
+}
+
+.start-game-btn:hover {
+    background: var(--button-hover-bg);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5); /* Adjust shadow for dark mode contrast */
+}
+
+.settings-btn-top-right {
+    background: rgba(0, 0, 0, 0.3); /* Darker background for dark mode */
+    border-color: rgba(255, 255, 255, 0.3); /* Lighter border for contrast */
+    color: var(--h3-color); /* Gold color for icon */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Adjust shadow for dark mode contrast */
+}
+
+.settings-btn-top-right:hover {
+    background: rgba(0, 0, 0, 0.4); /* Even darker on hover */
+}

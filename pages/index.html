@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartChess</title>
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/layout.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/modals.css">
+    
+    <link rel="stylesheet" href="../css/themes.css">
+    <link rel="stylesheet" href="../css/animations.css">
+</head>
+<body>
+    <div class="start-panel" id="startPanel">
+        <div class="start-panel-content">
+            <h1 class="game-title">SmartChess</h1>
+            <p class="tagline">Intelligent Chess Experience</p>
+            <button class="start-game-btn" onclick="openDifficultySelection()">Start Game</button>
+        </div>
+        <button class="settings-btn-top-right" onclick="toggleSettings()">⚙️</button>
+    </div>
+
+    <!-- Difficulty Selection Modal -->
+    <div id="difficultySelectionModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeDifficultySelection()" style="cursor: pointer; font-size: 24px; position: absolute; top: 10px; right: 15px;">×</span>
+            <h2>Choose Difficulty</h2>
+            <div class="settings-section">
+                <div class="difficulty-buttons">
+                    <button class="difficulty-btn active" data-level="easy" onclick="selectDifficulty('easy')">Easy</button>
+                    <button class="difficulty-btn" data-level="hard" onclick="selectDifficulty('hard')">Hard</button>
+                    <button class="difficulty-btn" data-level="difficult" onclick="selectDifficulty('difficult')">Difficult</button>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="reset-btn" onclick="playSelectedDifficulty()">Play</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeSettings()" style="cursor: pointer; font-size: 24px; position: absolute; top: 10px; right: 15px;">×</span>
+            <h2>⚙️ Game Settings</h2>
+            
+            <div class="settings-section">
+                <h3>Audio Settings</h3>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="musicToggle" onchange="toggleMusic()">
+                    <span class="slider"></span>
+                    <span class="toggle-label">Background Music</span>
+                </label>
+            </div>
+            <div class="settings-section">
+                <h3>Display Settings</h3>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+                    <span class="slider"></span>
+                    <span class="toggle-label">Dark Mode</span>
+                </label>
+            </div>
+            <div class="settings-section">
+                <h3>Help</h3>
+                <button class="settings-link" onclick="location.href='how_to_play.html'">How to Play</button>
+                <button class="settings-link" onclick="location.href='chess_tricks.html'">Chess Tricks</button>
+            </div>
+            <div class="modal-buttons">
+                <button class="close-btn" onclick="closeSettings()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Background Music Audio Element for index.html -->
+    <audio id="backgroundMusic" loop preload="auto">
+        <source src="../BackgroundMusic.mp3" type="audio/mp3">
+    </audio>
+
+    <script type="module" src="../js/main.js"></script>
+</body>
+</html>

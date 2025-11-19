@@ -1,18 +1,23 @@
-# Chess AI Game Opponent
+# SmartChess - AI Game Opponent
+
 ## Project Overview
-This project is a web-based chess game with an AI opponent and user analytics. It combines a modern JavaScript frontend with a Python Flask backend to deliver an interactive chess experience, player profiling, and Elo prediction.
+This project is a web-based chess game with an AI opponent and user analytics. It combines a modern, modularized JavaScript frontend with a Python Flask backend to deliver an interactive chess experience, player profiling, and Elo prediction. The application has been refactored for better maintainability and enhanced responsive design.
 
 ## Features
 - **Play Chess in Browser:** Interactive chessboard UI with move history, captured pieces, and new game/reset options.
-- **AI Opponent:** Backend uses Stockfish engine (if available) or a custom Adaptive AI (minimax with profiling) to play against the user.
+- **Modularized Frontend:** JavaScript and CSS are organized into dedicated `js` and `css` directories for improved code structure and maintainability. HTML pages are in the `pages` directory.
+- **AI Opponent:** Backend uses the Stockfish engine (if available) or a custom Adaptive AI (minimax with profiling) to play against the user.
 - **Player Profiling:** The AI adapts its strategy based on the user's playing style (aggressive, defensive, balanced).
 - **Elo Prediction:** After each game, the backend can predict the user's approximate Elo rating using a machine learning model (Linear Regression) trained on user game data.
 - **Game Data Storage:** User game results (result, blunders, centipawn loss, moves) are stored in a CSV file for analytics and model training.
+- **Responsive Design:** The UI dynamically adjusts to various screen sizes (desktop, tablet, mobile) ensuring a consistent and playable experience across devices.
+- **Optimized Performance:** AI move generation and feedback response times have been significantly reduced for a smoother user experience.
 
 ## Technologies Used
 ### Frontend
-- HTML, CSS, JavaScript (`index.html`, `style.css`, `script.js`)
+- HTML (modularized in `pages/`), CSS (modularized in `css/`), JavaScript (modularized in `js/`)
 - Dynamic chessboard rendering and move handling
+- Responsive design with multiple breakpoints for optimal viewing on desktop, tablet, and mobile.
 
 ### Backend
 - Python Flask (`backend/app.py`)
@@ -25,7 +30,6 @@ This project is a web-based chess game with an AI opponent and user analytics. I
 - `user_game_data.csv`: Stores user game results for analytics and ML
 
 ## AI/ML Techniques Used
-
 ### 1. Chess Engine AI
 - **Stockfish Integration:**
   - The backend uses the Stockfish chess engine (if available) for move generation. Stockfish is a world-class open-source chess engine that evaluates positions and suggests the best moves using advanced search and evaluation algorithms.
@@ -84,19 +88,17 @@ This project is a web-based chess game with an AI opponent and user analytics. I
 
 - **Manual Testing Command:**
   - You can manually test this feature from PowerShell or terminal using:
-    
+
     ```powershell
     Invoke-RestMethod -Uri "http://127.0.0.1:5000/move-feedback" -Method Post -Body '{"fen":"<FEN_STRING>","move":"<UCI_MOVE>"}' -ContentType "application/json"
     ```
-   Invoke-RestMethod -Uri "http://127.0.0.1:5000/move-feedback" -Method Post -Body '{"fen":"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1","move":"e2e4"}' -ContentType "application/json"
-    
     Replace `<FEN_STRING>` with the board position and `<UCI_MOVE>` with your move (e.g., `e2e4`).
-    
+
     Example:
     ```powershell
     Invoke-RestMethod -Uri "http://127.0.0.1:5000/move-feedback" -Method Post -Body '{"fen":"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1","move":"e2e4"}' -ContentType "application/json"
     ```
-    
+
     The backend terminal will print detailed move feedback for the given move.
 
 ### 6. Game Explanation (Why This Move?)
@@ -137,20 +139,51 @@ This project is a web-based chess game with an AI opponent and user analytics. I
 - **Purpose:**
   - This gives players real-time insight into who is favored in the current position, helping them understand the impact of each move and learn from the game's flow.
 
+## Recent Improvements (November 16, 2025)
+
+### Frontend & UI
+- **Modularization:** Complete refactoring of JavaScript and CSS into `js/` and `css/` directories respectively, with HTML pages located in `pages/`.
+- **Responsive Design Enhancements:**
+    - **Tablet (max-width: 768px):** Improved vertical stacking, horizontal scrolling panels, and optimized board/font sizes for better usability.
+    - **Mobile (max-width: 480px):** Introduced a new ultra-compact layout for small phones with smaller board squares (35x35px), compact panels, and adjusted font/button sizes.
+    - **Viewport Meta Tag:** Verified `<meta name="viewport" content="width=device-width, initial-scale=1.0">` for optimal mobile rendering.
+- **HTML Syntax Fix:** Removed stray characters from `pages/game.html` to ensure valid HTML5 parsing.
+
+### Backend & AI
+- **Game Auto-Reset Bug Fixed:** The backend no longer unexpectedly resets the game during mid-play. Resets now only occur for explicit new games or starting positions.
+- **AI Response Time Optimization:**
+    - Stockfish evaluation times for AI moves and move feedback have been significantly reduced (from 1.0s to 0.2-0.3s).
+    - This results in a much more responsive AI, reducing the "buffering" sensation and making the game feel smoother.
+- **AI Move Trigger Verification:** Confirmed that the AI correctly triggers its move after a player's move or after applying a move suggestion.
+- **Stockfish Path:** The `STOCKFISH_PATH` in `backend/app.py` has been updated to the user's specific path for correct engine integration.
+
 ## How to Run
-1. Install backend dependencies: `pip install -r backend/requirements.txt`
-2. (Optional) Download Stockfish engine and update its path in `app.py`.
-3. Run backend: `python backend/app.py`
-4. Open `index.html` in your browser to play.
+1.  **Install Backend Dependencies:**
+    ```bash
+    pip install -r backend/requirements.txt
+    ```
+2.  **(Optional) Download Stockfish Engine:**
+    -   Download the Stockfish engine from its official GitHub repository.
+    -   Update the `STOCKFISH_PATH` variable in `backend/app.py` to point to the executable (e.g., `C:\Users\user\Desktop\Project\SmartChess\stockfish_engine\stockfish-windows-x86-64-avx2\stockfish\stockfish-windows-x86-64-avx2.exe`).
+3.  **Run Backend Server:**
+    ```bash
+    python backend/app.py
+    ```
+4.  **Open Frontend:**
+    -   Open `pages/index.html` in your web browser.
 
 ## Folder Structure
-- `index.html`, `script.js`, `style.css`, `chess.js`, `three-chess.html`: Frontend files
-- `backend/`: Python backend, requirements, and user data
-- `pieces/`: (Empty/for future use)
+-   `backend/`: Python Flask backend, requirements, and user data (`app.py`, `requirements.txt`, `user_game_data.csv`)
+-   `css/`: Modularized CSS files (`animations.css`, `base.css`, `components.css`, `layout.css`, `modals.css`, `themes.css`)
+-   `js/`: Modularized JavaScript files (`ai_integration.js`, `audio_manager.js`, `game_core.js`, `main.js`, `ui_handlers.js`, `utils.js`)
+-   `pages/`: HTML game pages (`index.html`, `game.html`, `how_to_play.html`, `chess_tricks.html`)
+-   `BackgroundMusic.mp3`: Background music file.
+-   `README.md`: Project documentation.
+-   `stockfish_engine/`: Contains the Stockfish chess engine executable and related files.
 
 ## Notes
-- The project can be extended with more advanced AI/ML features (deep learning, puzzle generation, etc.).
-- All user data is stored locally in CSV format.
+-   The project can be extended with more advanced AI/ML features (deep learning, puzzle generation, etc.).
+-   All user data is stored locally in CSV format.
 
 ---
 Feel free to ask for more details or contribute new features!

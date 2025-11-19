@@ -1,0 +1,231 @@
+.game-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    background: #F5F5DC;
+    border-radius: 15px;
+    margin: 10px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    border: 2px solid #8B7355;
+}
+
+/* Left Side Panel */
+.left-panel {
+    width: 280px;
+    background: linear-gradient(135deg, #F5F5DC 0%, #F0E68C 100%);
+    border-right: 2px solid #8B7355;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Center Board Area */
+.center-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    min-width: 0;
+    background: #F5F5DC;
+}
+
+/* Right Side Panel */
+.right-panel {
+    width: 280px;
+    background: linear-gradient(135deg, #F5F5DC 0%, #F0E68C 100%);
+    border-left: 2px solid #8B7355;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.board-wrapper {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .left-panel, .right-panel {
+        width: 240px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .left-panel, .right-panel {
+        width: 200px;
+        padding: 15px;
+    }
+    
+    .chess-board {
+        grid-template-columns: repeat(8, 50px);
+        grid-template-rows: repeat(8, 50px);
+    }
+    
+    .square {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .piece {
+        font-size: 32px;
+    }
+    
+    .coordinates {
+        grid-template-columns: repeat(8, 50px);
+    }
+    
+    .rank-numbers {
+        grid-template-rows: repeat(8, 50px);
+    }
+}
+
+@media (max-width: 768px) {
+    .game-container {
+        flex-direction: column;
+        margin: 5px;
+        height: auto;
+    }
+    
+    .left-panel, .right-panel {
+        width: 100%;
+        height: auto;
+        max-height: 140px;
+        border-right: none;
+        border-left: none;
+        border-bottom: 2px solid #8B7355;
+        padding: 12px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        flex-direction: row;
+        gap: 8px;
+        align-items: center;
+    }
+    
+    .right-panel {
+        border-bottom: none;
+        border-top: 2px solid #8B7355;
+    }
+    
+    .center-area {
+        order: 2;
+        flex: 1;
+        height: auto;
+        padding: 10px;
+    }
+    
+    .left-panel {
+        order: 1;
+    }
+    
+    .right-panel {
+        order: 3;
+    }
+    
+    .panel-section {
+        flex-shrink: 0;
+        min-width: 220px;
+        padding: 12px;
+    }
+    
+    .panel-section h3 {
+        font-size: 14px;
+        margin: 0 0 8px 0;
+        padding-bottom: 5px;
+    }
+    
+    .chess-board {
+        grid-template-columns: repeat(8, 45px);
+        grid-template-rows: repeat(8, 45px);
+    }
+    
+    .square {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .piece {
+        font-size: 28px;
+    }
+    
+    .coordinates {
+        grid-template-columns: repeat(8, 45px);
+        font-size: 12px;
+    }
+    
+    .rank-numbers {
+        grid-template-rows: repeat(8, 45px);
+        font-size: 12px;
+    }
+    
+    .feedback-popup {
+        font-size: 16px;
+        padding: 12px 18px;
+    }
+    
+    .in-game-controls {
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .game-container {
+        margin: 2px;
+    }
+    
+    .left-panel, .right-panel {
+        max-height: 120px;
+        padding: 8px;
+        gap: 5px;
+    }
+    
+    .panel-section {
+        min-width: 160px;
+        padding: 8px;
+    }
+    
+    .panel-section h3 {
+        font-size: 12px;
+        margin: 0 0 5px 0;
+        padding-bottom: 4px;
+    }
+    
+    .piece {
+        font-size: 24px;
+    }
+    
+    .chess-board {
+        grid-template-columns: repeat(8, 40px);
+        grid-template-rows: repeat(8, 40px);
+    }
+    
+    .square {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .coordinates {
+        grid-template-columns: repeat(8, 40px);
+        font-size: 10px;
+    }
+    
+    .rank-numbers {
+        grid-template-rows: repeat(8, 40px);
+        font-size: 10px;
+    }
+    
+    .feedback-popup {
+        font-size: 14px;
+        padding: 10px 14px;
+    }
+}

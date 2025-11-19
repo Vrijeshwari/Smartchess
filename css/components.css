@@ -1,0 +1,643 @@
+/* Panel Sections */
+.panel-section {
+    background: var(--panel-bg);
+    border: 2px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    color: var(--text-color);
+}
+
+.panel-section h3 {
+    margin: 0 0 10px 0;
+    color: var(--h3-color);
+    font-size: 16px;
+    text-align: center;
+    border-bottom: 2px solid var(--h3-color); /* Use theme variable for consistency */
+    padding-bottom: 8px;
+    font-weight: bold;
+}
+.game-info {
+    text-align: center;
+    margin-bottom: 15px;
+}
+.current-player {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--h3-color);
+    margin-bottom: 10px;
+}
+.game-status {
+    font-size: 16px;
+    color: var(--text-color);
+}
+.outcome-prediction {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 8px 0;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--outcome-prediction-bg); /* Use theme variable */
+    border-left: 4px solid var(--outcome-prediction-border); /* Use theme variable */
+    color: var(--text-color);
+}
+.prediction-confidence {
+    font-size: 14px;
+    color: var(--h3-color);
+    margin-bottom: 5px;
+}
+
+/* Feedback Content in Panel Section */
+#feedbackContent {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-color);
+    text-align: center;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--captured-pieces-bg); /* Use theme variable for consistency */
+    border-radius: 8px;
+    padding: 10px;
+    font-weight: 500;
+    border: 1px solid var(--captured-pieces-border); /* Use theme variable for consistency */
+}
+
+#feedbackContent.good-move {
+    background: var(--success-bg-color, #C8E6C9);
+    color: var(--success-text-color, #2E7D32);
+}
+
+#feedbackContent.bad-move {
+    background: var(--error-bg-color, #FFCDD2);
+    color: var(--error-text-color, #C62828);
+}
+
+#feedbackContent.inaccuracy-move {
+    background: var(--warning-bg-color, #FFF9C4);
+    color: var(--warning-text-color, #F57F17);
+}
+
+.chess-board {
+    display: grid;
+    grid-template-columns: repeat(8, 70px);
+    grid-template-rows: repeat(8, 70px);
+    border: 4px solid var(--panel-border); /* Use theme variable */
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+.square {
+    width: 70px;
+    height: 70px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.square.light {
+    background-color: var(--light-square);
+}
+.square.dark {
+    background-color: var(--dark-square);
+}
+.square:hover {
+    background-color: var(--valid-move-square) !important; /* Use theme variable for hover */
+    transform: scale(1.03); /* Subtle scale effect */
+}
+.square.selected {
+    background-color: var(--selected-square) !important;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+}
+.square.valid-move {
+    background-color: var(--valid-move-square) !important;
+}
+.square.valid-move::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background-color: rgba(0,0,0,0.3);
+    border-radius: 50%;
+}
+.piece {
+    font-size: 45px;
+    cursor: grab;
+    user-select: none;
+    transition: all 0.2s cubic-bezier(.4,2,.6,1), left 0.3s, top 0.3s;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    position: relative;
+    z-index: 2;
+}
+.piece.moving {
+    transition: all 0.3s cubic-bezier(.4,2,.6,1), left 0.3s, top 0.3s;
+    z-index: 10;
+}
+.piece:hover {
+    transform: scale(1.1);
+}
+.piece.dragging {
+    opacity: 0.7;
+    transform: scale(1.2);
+    cursor: grabbing;
+}
+.coordinates {
+    display: grid;
+    grid-template-columns: repeat(8, 70px);
+    grid-template-rows: 20px;
+    margin-top: 5px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--text-color); /* Use theme variable */
+}
+.rank-numbers {
+    display: grid;
+    grid-template-columns: 20px;
+    grid-template-rows: repeat(8, 70px);
+    margin-right: 5px;
+    text-align: center;
+    align-items: center;
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--text-color); /* Use theme variable */
+}
+.reset-btn {
+    margin-top: 20px;
+    padding: 12px 24px;
+    background: var(--button-bg); /* Use theme variable */
+    color: var(--button-color); /* Use theme variable */
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Consistent shadow */
+}
+.reset-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    background: var(--button-hover-bg); /* Use theme variable for hover */
+}
+.captured-pieces {
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-color);
+}
+.captured-pieces div {
+    margin: 8px 0;
+    padding: 8px;
+    background: var(--captured-pieces-bg); /* Use theme variable */
+    border-radius: 8px;
+    border: 1px solid var(--captured-pieces-border); /* Use theme variable */
+    color: var(--text-color);
+    font-weight: bold;
+}
+.captured-white, .captured-black {
+    font-size: 18px;
+    margin-left: 5px;
+}
+
+/* Settings Modal */
+.settings-section {
+    margin: 20px 0;
+}
+
+.settings-section h3 {
+    color: var(--h3-color);
+    margin-bottom: 10px;
+    font-size: 18px;
+}
+
+.difficulty-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap; /* Allow buttons to wrap */
+}
+
+.difficulty-btn {
+    padding: 10px 20px;
+    border: 2px solid var(--panel-border); /* Use theme variable */
+    background: var(--panel-bg); /* Use theme variable */
+    color: var(--text-color); /* Use theme variable */
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    pointer-events: auto;
+    text-align: center; /* Center text in button */
+}
+
+.difficulty-btn.active {
+    background: var(--toggle-slider-checked); /* Use theme variable */
+    color: var(--button-color); /* Use theme variable */
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2); /* Consistent shadow */
+}
+
+.difficulty-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+    background: var(--button-hover-bg); /* Use theme variable */
+    color: var(--button-color); /* Use theme variable */
+}
+
+.difficulty-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Toggle Switch */
+.toggle-switch {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+    cursor: pointer;
+}
+
+.toggle-switch input[type="checkbox"] {
+    display: none;
+}
+
+.slider {
+    position: relative;
+    width: 50px;
+    height: 24px;
+    background: var(--panel-border); /* Use theme variable */
+    border-radius: 24px;
+    transition: background 0.3s ease;
+}
+
+.slider:before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch input:checked + .slider {
+    background: var(--toggle-slider-checked); /* Use theme variable */
+}
+
+.toggle-switch input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.toggle-label {
+    font-size: 16px;
+    color: var(--text-color); /* Use theme variable */
+    font-weight: 500;
+}
+
+/* Start Panel Styles */
+.start-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background: var(--bg-dark); /* Use theme variable */
+    color: var(--text-color); /* Use theme variable */
+    text-shadow: none; /* Remove text shadow for cleaner look with gradient */
+    position: relative; /* For positioning the settings button */
+    padding: 20px; /* Add some padding for smaller screens */
+    box-sizing: border-box; /* Include padding in element's total width and height */
+}
+
+.start-panel-content {
+    text-align: center;
+    animation: fadeInUp 1s ease-out;
+    max-width: 90%; /* Limit width on larger screens */
+}
+
+.game-title {
+    font-family: 'Arial Black', Gadget, sans-serif;
+    font-size: clamp(3em, 8vw, 6em); /* Responsive font size */
+    margin-bottom: 20px;
+    letter-spacing: 5px;
+    background: var(--game-title-gradient); /* Use theme variable */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: glow 1.5s infinite alternate;
+    white-space: nowrap; /* Prevent title from wrapping */
+    overflow: hidden; /* Hide overflow if it gets too big */
+    text-overflow: ellipsis; /* Add ellipsis if hidden */
+}
+
+.tagline {
+    font-size: clamp(1em, 2vw, 1.8em); /* Responsive font size */
+    margin-bottom: 40px;
+    font-style: italic;
+    opacity: 0.8;
+    color: var(--text-color); /* Use theme variable */
+    max-width: 800px; /* Limit width */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.start-game-btn {
+    padding: 15px 40px;
+    font-size: clamp(1.2em, 2.5vw, 1.8em); /* Responsive font size */
+    font-weight: bold;
+    border: none;
+    border-radius: 30px;
+    background: var(--button-bg); /* Use theme variable */
+    color: var(--button-color); /* Use theme variable */
+    cursor: pointer;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    pointer-events: auto;
+}
+
+.start-game-btn:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    background: var(--button-hover-bg); /* Use theme variable */
+}
+
+.start-game-btn:active {
+    transform: translateY(-1px) scale(0.98);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+.settings-btn-top-right {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+    color: var(--button-color); /* Use theme variable */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    pointer-events: auto;
+}
+
+.settings-btn-top-right:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(45deg) scale(1.1);
+}
+
+.settings-btn-top-right:active {
+    transform: rotate(45deg) scale(0.95);
+}
+
+/* In-Game Controls Styling */
+.in-game-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 10px;
+    align-items: stretch; /* Make buttons take full width */
+}
+
+.in-game-controls .suggest-btn,
+.in-game-controls .quit-btn {
+    padding: 12px 20px;
+    border: 2px solid var(--panel-border); /* Use theme variable */
+    background: var(--button-bg);
+    color: var(--button-color);
+    border-radius: 25px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    pointer-events: auto;
+}
+
+.in-game-controls .suggest-btn:hover,
+.in-game-controls .quit-btn:hover {
+    transform: translateY(-2px);
+    background: var(--button-hover-bg);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.in-game-controls .suggest-btn:active,
+.in-game-controls .quit-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.in-game-controls .toggle-switch {
+    margin: 10px auto; /* Center toggle switch */
+}
+
+.in-game-controls .toggle-switch .toggle-label {
+    color: var(--text-color); /* Use theme text color for visibility in dark mode */
+}
+
+/* AI Explanation Panel */
+.ai-explanation-panel {
+    background: var(--panel-bg); /* Use theme variable */
+    border: 2px solid var(--panel-border); /* Use theme variable */
+    border-radius: 12px;
+    padding: 15px;
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    color: var(--text-color); /* Use theme variable */
+}
+
+.ai-explanation-panel h3 {
+    margin: 0 0 10px 0;
+    color: var(--h3-color);
+    font-size: 16px;
+    text-align: center;
+    font-weight: bold;
+    border-bottom: 2px solid var(--h3-color); /* Consistent border */
+    padding-bottom: 8px;
+}
+
+.explanation-content {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-color);
+    text-align: center;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--captured-pieces-bg); /* Use theme variable */
+    border-radius: 8px;
+    padding: 10px;
+    border: 1px solid var(--captured-pieces-border); /* Consistent border */
+}
+
+/* Move Suggestion Panel */
+.move-suggestion-panel {
+    background: var(--panel-bg); /* Use theme variable */
+    border: 2px solid var(--panel-border); /* Use theme variable */
+    border-radius: 12px;
+    padding: 15px;
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    display: none;
+    color: var(--text-color); /* Use theme variable */
+}
+
+.move-suggestion-panel h3 {
+    margin: 0 0 10px 0;
+    color: var(--h3-color);
+    font-size: 16px;
+    text-align: center;
+    font-weight: bold;
+    border-bottom: 2px solid var(--h3-color); /* Consistent border */
+    padding-bottom: 8px;
+}
+
+.suggestion-content {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-color);
+    text-align: center;
+    margin-bottom: 10px;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--captured-pieces-bg); /* Use theme variable */
+    border-radius: 8px;
+    padding: 10px;
+    border: 1px solid var(--captured-pieces-border); /* Consistent border */
+}
+
+.apply-suggestion-btn {
+    display: block;
+    margin: 10px auto 0 auto;
+    padding: 10px 20px;
+    background: var(--button-bg); /* Use theme variable */
+    color: var(--button-color); /* Use theme variable */
+    border: 2px solid var(--panel-border); /* Use theme variable */
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    pointer-events: auto;
+}
+
+.apply-suggestion-btn:hover {
+    transform: translateY(-2px);
+    background: var(--button-hover-bg); /* Use theme variable */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Settings Link */
+.settings-link {
+    display: block;
+    padding: 8px 15px;
+    margin: 5px auto; /* Center link */
+    color: var(--text-color);
+    background: none;
+    border: none;
+    text-align: center;
+    font-size: 16px;
+    cursor: pointer;
+    transition: color 0.3s ease, background-color 0.3s ease;
+    pointer-events: auto;
+    border-radius: 8px; /* Add border-radius for aesthetics */
+}
+
+.settings-link:hover {
+    background-color: var(--bg-medium); /* Use theme variable */
+    color: var(--h3-color); /* Adjust text color on hover for contrast */
+}
+
+/* Default Settings Button */
+.default-settings-btn {
+    padding: 12px 24px;
+    border: 2px solid var(--panel-border); /* Use theme variable */
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 120px;
+    background: var(--button-bg); /* Use theme variable */
+    color: var(--button-color); /* Use theme variable */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    margin-right: 15px;
+}
+
+.default-settings-btn:hover {
+    transform: translateY(-2px);
+    background: var(--button-hover-bg); /* Use theme variable */
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Back Button Styling (for content pages) */
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    margin-bottom: 20px;
+    background: var(--button-bg);
+    color: var(--button-color);
+    border: none;
+    border-radius: 25px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none; /* Remove underline for anchor tag */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.back-button:hover {
+    transform: translateY(-2px);
+    background: var(--button-hover-bg);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.back-button-top-right {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    color: var(--button-color); /* Use theme variable */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    text-decoration: none;
+}
+
+.back-button-top-right:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.back-button-top-right:active {
+    transform: scale(0.95);
+}
