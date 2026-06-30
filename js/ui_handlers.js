@@ -267,7 +267,7 @@ export function playSelectedDifficulty() {
         window.saveSettings();
     }
     // Navigate to game page
-    window.location.href = 'game.html';
+    window.location.href = '/pages/game.html';
 }
 
 // Castling confirmation UI handlers
