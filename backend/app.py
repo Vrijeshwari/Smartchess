@@ -1,5 +1,6 @@
 # --- Place this route after app = Flask(__name__) ---
 import os
+import platform
 import random
 import time
 import pandas as pd
@@ -554,9 +555,21 @@ class AdaptiveAI:
         
         # Final fallback
         return random.choice(legal_moves)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+STOCKFISH_DIR = os.path.join(BASE_DIR, "stockfish_engine")
 
-STOCKFISH_PATH = r"C:\\Users\\user\\Desktop\\Project\\SmartChess\\stockfish_engine\\stockfish-windows-x86-64-avx2\\stockfish\\stockfish-windows-x86-64-avx2.exe"
+if platform.system() == "Windows":
+    STOCKFISH_PATH = os.path.join(
+        STOCKFISH_DIR,
+        "stockfish-windows-x86-64-avx2.exe"
+    )
+else:
+    STOCKFISH_PATH = os.path.join(
+        STOCKFISH_DIR,
+        "stockfish"
+    )
 
+print(f"[INFO] Using Stockfish: {STOCKFISH_PATH}")
 def start_stockfish():
     try:
         engine = chess.engine.SimpleEngine.popen_uci(STOCKFISH_PATH)
@@ -568,7 +581,6 @@ def start_stockfish():
 
 stockfish_engine = start_stockfish()
 ai_engine = AdaptiveAI()
-
 
 def analyze_with_retry(board, limit, multipv=None):
     """Run engine analysis with a restart-on-failure policy.
