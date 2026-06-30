@@ -16,7 +16,7 @@ import csv
 random.seed(int(time.time()))
 
 app = Flask(__name__)
-CORS(app
+CORS(app)
 # --- Helper: Detect Why a Move is Illegal ---
 def get_illegal_move_reason(board, move_uci):
     """
