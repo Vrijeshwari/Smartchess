@@ -1,6 +1,4 @@
-
 # --- Place this route after app = Flask(__name__) ---
-
 import os
 import random
 import time
@@ -18,8 +16,7 @@ import csv
 random.seed(int(time.time()))
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": ["http://127.0.0.1:5501"], "allow_headers": "*", "methods": ["GET", "POST", "OPTIONS", "PUT", "DELETE"]}}, supports_credentials=True)
-
+CORS(app
 # --- Helper: Detect Why a Move is Illegal ---
 def get_illegal_move_reason(board, move_uci):
     """
@@ -1307,6 +1304,8 @@ def suggest_move():
     except Exception as e:
         print(f"[ERROR] Move suggestion failed: {e}")
         return jsonify({'error': str(e)}), 500
-
+@app.route("/")
+def home():
+    return "SmartChess Backend is Running!"
 if __name__ == '__main__':
     app.run(debug=False, use_reloader=False)
